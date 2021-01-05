@@ -18,6 +18,7 @@
 package org.jboss.pnc.builddriver;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.security.TestSecurity;
 import io.restassured.RestAssured;
 import io.restassured.specification.RequestSpecification;
 import io.undertow.util.Headers;
@@ -62,6 +63,7 @@ import static org.jboss.pnc.builddriver.dto.Status.INTERRUPTED;
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
  */
 @QuarkusTest
+@TestSecurity(authorizationEnabled = false)
 public class BuildDriverTest {
 
     private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());

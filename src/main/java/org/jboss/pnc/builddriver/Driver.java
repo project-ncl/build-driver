@@ -44,7 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
@@ -67,7 +67,7 @@ import static org.jboss.pnc.builddriver.dto.Status.SYSTEM_ERROR;
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
  */
-@ApplicationScoped
+@RequestScoped
 public class Driver {
 
     private static final Logger logger = LoggerFactory.getLogger(Driver.class);

@@ -18,10 +18,15 @@
 
 package org.jboss.pnc.builddriver.endpoints;
 
+import io.quarkus.security.Authenticated;
+import org.jboss.pnc.builddriver.Driver;
 import org.jboss.pnc.builddriver.dto.BuildRequest;
 import org.jboss.pnc.builddriver.dto.BuildResponse;
 import org.jboss.pnc.builddriver.dto.CancelRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -36,24 +41,35 @@ import java.util.concurrent.CompletionStage;
  *
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
  */
-
 @Path("/")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public interface Public {
+public class Public {
+
+    private static final Logger logger = LoggerFactory.getLogger(Public.class);
+
+    @Inject
+    Driver driver;
 
     /**
      * Triggers the build execution for a given configuration.
      */
+//    @Authenticated
     @POST
     @Path("/build")
-    CompletionStage<BuildResponse> build(BuildRequest buildRequest);
+    public CompletionStage<BuildResponse> build(BuildRequest buildRequest) {
+        logger.info("Requested project build: {}", buildRequest.getProjectName());
+        return driver.start(buildRequest);
+    }
 
     /**
      * Cancel the build execution.
      */
+    @Authenticated
     @PUT
     @Path("/cancel")
-    CompletionStage<Response> cancel(CancelRequest cancelRequest);
-
+    public CompletionStage<Response> cancel(CancelRequest cancelRequest) {
+        logger.info("Requested cancel: {}", cancelRequest.getBuildExecutionId());
+        return driver.cancel(cancelRequest).thenApply((r) -> Response.status(r.getCode()).build());
+    }
 }

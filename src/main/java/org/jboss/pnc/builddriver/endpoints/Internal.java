@@ -18,8 +18,13 @@
 
 package org.jboss.pnc.builddriver.endpoints;
 
+import io.quarkus.security.Authenticated;
 import org.jboss.pnc.buildagent.api.TaskStatusUpdateEvent;
+import org.jboss.pnc.builddriver.Driver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -35,7 +40,12 @@ import java.util.concurrent.CompletionStage;
 @Path("/internal")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public interface Internal {
+public class Internal {
+
+    private static final Logger logger = LoggerFactory.getLogger(Internal.class);
+
+    @Inject
+    Driver driver;
 
     /**
      * Used by Build Agent to notify completion.
@@ -43,8 +53,12 @@ public interface Internal {
      * @param updateEvent
      * @return
      */
+    @Authenticated
     @PUT
     @Path("/completed")
-    CompletionStage<Void> buildExecutionCompleted(TaskStatusUpdateEvent updateEvent);
-
+    public CompletionStage<Void> buildExecutionCompleted(
+            TaskStatusUpdateEvent updateEvent) {
+        logger.info("Build completed, taskId: {}; status: {}.", updateEvent.getTaskId(), updateEvent.getNewStatus());
+        return driver.completed(updateEvent);
+    }
 }

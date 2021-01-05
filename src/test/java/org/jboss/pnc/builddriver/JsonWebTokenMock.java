@@ -16,31 +16,35 @@
  * limitations under the License.
  */
 
-package org.jboss.pnc.builddriver.endpoints;
+package org.jboss.pnc.builddriver;
 
-import org.jboss.pnc.buildagent.api.TaskStatusUpdateEvent;
-import org.jboss.pnc.builddriver.Driver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.quarkus.test.Mock;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 
-import javax.inject.Inject;
-import java.util.concurrent.CompletionStage;
+import java.util.Set;
 
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
  */
-public class InternalImpl implements Internal {
-
-    private static final Logger logger = LoggerFactory.getLogger(InternalImpl.class);
-
-    @Inject
-    Driver driver;
+@Mock
+public class JsonWebTokenMock implements JsonWebToken {
+    @Override
+    public String getName() {
+        return null;
+    }
 
     @Override
-    public CompletionStage<Void> buildExecutionCompleted(
-            TaskStatusUpdateEvent updateEvent) {
-        logger.info("Build completed, taskId: {}; status: {}.", updateEvent.getTaskId(), updateEvent.getNewStatus());
+    public Set<String> getClaimNames() {
+        return null;
+    }
 
-        return driver.completed(updateEvent);
+    @Override
+    public <T> T getClaim(String claimName) {
+        return null;
+    }
+
+    @Override
+    public String getRawToken() {
+        return "-raw-auth-token-";
     }
 }
