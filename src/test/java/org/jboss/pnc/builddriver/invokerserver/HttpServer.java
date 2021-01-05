@@ -42,10 +42,9 @@ public class HttpServer {
     private Undertow undertow;
 
     private Map<Class<? extends Servlet>, Optional<InstanceFactory<? extends Servlet>>> servlets = new HashMap<>();
-    
+
     public void start(int port, String host) throws ServletException {
-        DeploymentInfo servletBuilder = deployment()
-                .setClassLoader(BootstrapUndertow.class.getClassLoader())
+        DeploymentInfo servletBuilder = deployment().setClassLoader(BootstrapUndertow.class.getClassLoader())
                 .setContextPath("/")
                 .setDeploymentName("ROOT.war");
 
@@ -54,11 +53,10 @@ public class HttpServer {
             if (instanceFactory.isPresent()) {
                 servletBuilder.addServlet(
                         servlet(servletClass.getSimpleName(), servletClass, instanceFactory.get())
-                            .addMapping(servletClass.getSimpleName()));
+                                .addMapping(servletClass.getSimpleName()));
             } else {
                 servletBuilder.addServlet(
-                        servlet(servletClass.getSimpleName(), servletClass)
-                                .addMapping(servletClass.getSimpleName()));
+                        servlet(servletClass.getSimpleName(), servletClass).addMapping(servletClass.getSimpleName()));
             }
         }
 
@@ -67,10 +65,7 @@ public class HttpServer {
 
         HttpHandler servletHandler = manager.start();
 
-        undertow = Undertow.builder()
-                .addHttpListener(port, host)
-                .setHandler(servletHandler)
-                .build();
+        undertow = Undertow.builder().addHttpListener(port, host).setHandler(servletHandler).build();
 
         undertow.start();
     }
@@ -79,7 +74,9 @@ public class HttpServer {
         undertow.stop();
     }
 
-    public void addServlet(Class<? extends Servlet> servletClass, Optional<InstanceFactory<? extends Servlet>> servletFactory) {
+    public void addServlet(
+            Class<? extends Servlet> servletClass,
+            Optional<InstanceFactory<? extends Servlet>> servletFactory) {
         this.servlets.put(servletClass, servletFactory);
     }
 }

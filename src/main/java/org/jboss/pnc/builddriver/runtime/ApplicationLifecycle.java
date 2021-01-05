@@ -30,13 +30,13 @@ import javax.enterprise.event.Observes;
 @ApplicationScoped
 public class ApplicationLifecycle {
 
-//    @ConfigProperty(name = "sequenceGenerator.nodeId", defaultValue = "0") //max 1023
-//    int nodeId;
+    // @ConfigProperty(name = "sequenceGenerator.nodeId", defaultValue = "0") //max 1023
+    // int nodeId;
 
     void onStart(@Observes StartupEvent event) {
         // two instances of the same application will use the same if
         // get the deployment meta-data (env var) based id
-        //        Sequence.setNodeId(nodeId);
+        // Sequence.setNodeId(nodeId);
     }
 
     void onStop(@Observes ShutdownEvent event) {

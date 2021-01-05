@@ -56,8 +56,7 @@ public class Internal {
     @Authenticated
     @PUT
     @Path("/completed")
-    public CompletionStage<Void> buildExecutionCompleted(
-            TaskStatusUpdateEvent updateEvent) {
+    public CompletionStage<Void> buildExecutionCompleted(TaskStatusUpdateEvent updateEvent) {
         logger.info("Build completed, taskId: {}; status: {}.", updateEvent.getTaskId(), updateEvent.getNewStatus());
         return driver.completed(updateEvent);
     }

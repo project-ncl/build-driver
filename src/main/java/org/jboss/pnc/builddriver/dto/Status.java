@@ -23,12 +23,7 @@ package org.jboss.pnc.builddriver.dto;
  */
 public enum Status {
 
-    NEW (false),
-    RUNNING (false),
-    COMPLETED (true),
-    FAILED (true),
-    SYSTEM_ERROR(true),
-    INTERRUPTED (true);
+    NEW(false), RUNNING(false), COMPLETED(true), FAILED(true), SYSTEM_ERROR(true), INTERRUPTED(true);
 
     private final boolean final_;
 

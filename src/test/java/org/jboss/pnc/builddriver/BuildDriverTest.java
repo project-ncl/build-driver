@@ -104,8 +104,7 @@ public class BuildDriverTest {
 
     @Test
     @Timeout(10)
-    public void shouldStartAndCompleteSuccessfully()
-            throws InterruptedException, URISyntaxException {
+    public void shouldStartAndCompleteSuccessfully() throws InterruptedException, URISyntaxException {
 
         Request callback = new Request(
                 Request.Method.POST,
@@ -123,13 +122,16 @@ public class BuildDriverTest {
                 false,
                 null);
 
-        //start the build
-        BuildResponse buildResponse = given()
-                .contentType(MediaType.APPLICATION_JSON)
+        // start the build
+        BuildResponse buildResponse = given().contentType(MediaType.APPLICATION_JSON)
                 .body(buildRequest)
-                .when().post("/build")
-                .then().statusCode(200)
-                .extract().body().as(BuildResponse.class);
+                .when()
+                .post("/build")
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(BuildResponse.class);
 
         Request receivedCancel = buildResponse.getCancel();
         Assertions.assertNotNull(receivedCancel.getUri());
@@ -141,7 +143,7 @@ public class BuildDriverTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     @Timeout(10)
     public void shouldStartAndCancelTheExecutionImmediately(boolean debugEnabled)
             throws InterruptedException, URISyntaxException {
@@ -162,31 +164,35 @@ public class BuildDriverTest {
                 debugEnabled,
                 null);
 
-        //start the build
-        BuildResponse buildResponse = given()
-                .contentType(MediaType.APPLICATION_JSON)
+        // start the build
+        BuildResponse buildResponse = given().contentType(MediaType.APPLICATION_JSON)
                 .body(buildRequest)
-                .when().post("/build")
-                .then().statusCode(200)
-                .extract().body().as(BuildResponse.class);
+                .when()
+                .post("/build")
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(BuildResponse.class);
 
         Request receivedCancel = buildResponse.getCancel();
         Assertions.assertNotNull(receivedCancel.getUri());
 
         CancelRequest cancelRequest = new CancelRequest(
                 buildResponse.getBuildExecutionId(),
-                baseBuildAgentUri.toString()
-        );
+                baseBuildAgentUri.toString());
 
-        //cancel the build
+        // cancel the build
         RequestSpecification requestSpecification = given().contentType(MediaType.APPLICATION_JSON);
-        buildResponse.getCancel().getHeaders().stream().forEach(header -> requestSpecification.header(header.getName(), header.getValue())); //not part of the test, inspect the log for MDC (look at /cancel)
-        requestSpecification
-                .body(cancelRequest)
-                .when()
-                .put(receivedCancel.getUri())
-                .then()
-                .statusCode(200);
+        buildResponse.getCancel()
+                .getHeaders()
+                .stream()
+                .forEach(header -> requestSpecification.header(header.getName(), header.getValue())); // not part of the
+                                                                                                      // test, inspect
+                                                                                                      // the log for MDC
+                                                                                                      // (look at
+                                                                                                      // /cancel)
+        requestSpecification.body(cancelRequest).when().put(receivedCancel.getUri()).then().statusCode(200);
 
         logger.info("Waiting for result ...");
         BuildCompleted buildCompleted = completedBuilds.take();
@@ -197,8 +203,7 @@ public class BuildDriverTest {
 
     @Test
     @Timeout(5)
-    public void shouldRejectCompletionRequestWhenFailsToNotifyInvoker()
-            throws URISyntaxException {
+    public void shouldRejectCompletionRequestWhenFailsToNotifyInvoker() throws URISyntaxException {
 
         Request invokerCallback = new Request(
                 Request.Method.POST,
@@ -215,13 +220,12 @@ public class BuildDriverTest {
                 .context(context)
                 .build();
 
-        given()
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(event)
-        .when()
-            .put("/internal/completed")
-        .then()
-            .statusCode(500);
+        given().contentType(MediaType.APPLICATION_JSON)
+                .body(event)
+                .when()
+                .put("/internal/completed")
+                .then()
+                .statusCode(500);
     }
 
 }

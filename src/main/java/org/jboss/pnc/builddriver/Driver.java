@@ -102,7 +102,7 @@ public class Driver {
     @ConfigProperty(name = "build-driver.socket-write-timeout", defaultValue = "1000")
     int socketWriteTimeout;
 
-    //retry for ~7h with the defaults
+    // retry for ~7h with the defaults
     @ConfigProperty(name = "build-driver.invoker-callback.max-retries", defaultValue = "100")
     int invokerMaxRetries;
 
@@ -127,8 +127,7 @@ public class Driver {
                     buildRequest.getWorkingDirectory(),
                     buildRequest.getCompletionCallback(),
                     buildRequest.isDebugEnabled(),
-                    buildRequest.getEnvironmentBaseUrl()
-            );
+                    buildRequest.getEnvironmentBaseUrl());
 
             executionCompletedCallback = new Request(
                     Request.Method.PUT,
@@ -157,46 +156,40 @@ public class Driver {
                 buildRequest.getProjectName(),
                 buildRequest.getScmUrl(),
                 buildRequest.getScmRevision(),
-                buildRequest.getCommand()
-        );
+                buildRequest.getCommand());
         logger.debug("Build script: {}", buildScript);
         Path runScriptPath = Paths.get(workingDirectory, "/run.sh");
 
         logger.debug("Scheduling script upload ...");
-        return buildAgentClient.uploadFile(
-                ByteBuffer.wrap(buildScript.getBytes(StandardCharsets.UTF_8)),
-                runScriptPath)
-        .thenAcceptAsync(response -> {
-            logger.info("Script upload completed with status: {}", response.getCode());
-            if (!isSuccess(response.getCode())) {
-                throw new RuntimeException("Filed to upload build script. Response code: " + response.getCode());
-            }
-        }, executor).thenComposeAsync((aVoid) -> {
-            String command = "sh " + runScriptPath;
-            logger.info("Invoking remote command {}.", command);
-            return buildAgentClient.executeAsync(command);
-        }, executor).thenApplyAsync(sessionId -> {
-            logger.info("Remote command invoked.");
-            URI buildCancelUrl;
-            try {
-                buildCancelUrl = new URI(
-                        Strings.stripEndingSlash(selfBaseUrl) + "/cancel");
-            } catch (URISyntaxException e) {
-                throw new CompletionException(new DriverException("Cannot construct cancel URL.", e));
-            }
-            Request cancel = new Request(
-                    Request.Method.PUT,
-                    buildCancelUrl,
-                    headers
-            );
-            return new BuildResponse(cancel, sessionId);
-        }, executor);
+        return buildAgentClient.uploadFile(ByteBuffer.wrap(buildScript.getBytes(StandardCharsets.UTF_8)), runScriptPath)
+                .thenAcceptAsync(response -> {
+                    logger.info("Script upload completed with status: {}", response.getCode());
+                    if (!isSuccess(response.getCode())) {
+                        throw new RuntimeException(
+                                "Filed to upload build script. Response code: " + response.getCode());
+                    }
+                }, executor)
+                .thenComposeAsync((aVoid) -> {
+                    String command = "sh " + runScriptPath;
+                    logger.info("Invoking remote command {}.", command);
+                    return buildAgentClient.executeAsync(command);
+                }, executor)
+                .thenApplyAsync(sessionId -> {
+                    logger.info("Remote command invoked.");
+                    URI buildCancelUrl;
+                    try {
+                        buildCancelUrl = new URI(Strings.stripEndingSlash(selfBaseUrl) + "/cancel");
+                    } catch (URISyntaxException e) {
+                        throw new CompletionException(new DriverException("Cannot construct cancel URL.", e));
+                    }
+                    Request cancel = new Request(Request.Method.PUT, buildCancelUrl, headers);
+                    return new BuildResponse(cancel, sessionId);
+                }, executor);
     }
 
-    public CompletableFuture<Void> completed(
-            TaskStatusUpdateEvent event) {
+    public CompletableFuture<Void> completed(TaskStatusUpdateEvent event) {
 
-        //context is de-serialized as HashMap
+        // context is de-serialized as HashMap
         CallbackContext context = objectMapper.convertValue(event.getContext(), CallbackContext.class);
 
         String logPath = context.getWorkingDirectory() + "/console.log";
@@ -221,8 +214,7 @@ public class Driver {
                 || status == org.jboss.pnc.buildagent.api.Status.SYSTEM_ERROR
                 || status == org.jboss.pnc.buildagent.api.Status.INTERRUPTED) && context.isEnableDebugOnFailure()) {
             debugEnabled = true;
-            optionallyEnableSsh = buildAgentClient.executeAsync(
-                    "/usr/local/bin/startSshd.sh");
+            optionallyEnableSsh = buildAgentClient.executeAsync("/usr/local/bin/startSshd.sh");
         } else {
             debugEnabled = false;
             optionallyEnableSsh = CompletableFuture.completedFuture(null);
@@ -230,8 +222,7 @@ public class Driver {
 
         return optionallyEnableSsh.thenCompose(s -> {
             logger.debug("Downloading file to String Buffer from {}", logPath);
-            return buildAgentClient.downloadFile(
-                    Paths.get(logPath), maxLogSize);
+            return buildAgentClient.downloadFile(Paths.get(logPath), maxLogSize);
         }).thenApplyAsync(response -> {
 
             StringBuilder logBuilder = new StringBuilder();
@@ -243,11 +234,12 @@ public class Driver {
             if (!stringResult.isComplete()) {
                 logger.warn("\nLog file was not fully downloaded from: {}", logPath);
                 logBuilder.append("----- build log was cut -----\n");
-                if (Status.COMPLETED.equals(status)) { //status is success
+                if (Status.COMPLETED.equals(status)) { // status is success
                     logBuilder.append(
                             "----- build completed successfully but it is marked as failed due to log overflow. Max log size is "
                                     + maxLogSize + " -----\n");
-                    return new BuildCompleted(logBuilder.toString(),
+                    return new BuildCompleted(
+                            logBuilder.toString(),
                             FAILED,
                             event.getOutputChecksum(),
                             debugEnabled,
@@ -255,14 +247,15 @@ public class Driver {
                 }
             }
 
-
-            return new BuildCompleted(logBuilder.toString(), Status.valueOf(status.name()), event.getOutputChecksum(), debugEnabled, null);
+            return new BuildCompleted(
+                    logBuilder.toString(),
+                    Status.valueOf(status.name()),
+                    event.getOutputChecksum(),
+                    debugEnabled,
+                    null);
         }, executor).handleAsync((completedBuild, throwable) -> {
             if (throwable != null) {
-                return completedBuild.toBuilder()
-                        .throwable(throwable)
-                        .status(SYSTEM_ERROR)
-                        .build();
+                return completedBuild.toBuilder().throwable(throwable).status(SYSTEM_ERROR).build();
             } else {
                 return completedBuild;
             }
@@ -292,24 +285,26 @@ public class Driver {
             logger.error("Cannot serialize result.", e);
             return CompletableFuture.failedFuture(new DriverException("Cannot serialize result.", e));
         }
-        return httpClient.invoke(
-                new Request(callback.getMethod(), callback.getUri(), callback.getHeaders()),
-                ByteBuffer.wrap(data),
-                invokerMaxRetries,
-                invokerWaitBeforeRetry,
-                -1L,
-                socketReadTimeout,
-                socketWriteTimeout)
-            .thenApply(response -> {
-                if (isSuccess(response.getCode())) {
-                    logger.info("Successfully sent buildCompleted to the invoker.");
-                } else {
-                    String message = "Error sending buildCompleted to the invoker. Response code: " + response.getCode();
-                    logger.error(message);
-                    throw new CompletionException(new DriverException(message));
-                }
-                return null;
-            });
+        return httpClient
+                .invoke(
+                        new Request(callback.getMethod(), callback.getUri(), callback.getHeaders()),
+                        ByteBuffer.wrap(data),
+                        invokerMaxRetries,
+                        invokerWaitBeforeRetry,
+                        -1L,
+                        socketReadTimeout,
+                        socketWriteTimeout)
+                .thenApply(response -> {
+                    if (isSuccess(response.getCode())) {
+                        logger.info("Successfully sent buildCompleted to the invoker.");
+                    } else {
+                        String message = "Error sending buildCompleted to the invoker. Response code: "
+                                + response.getCode();
+                        logger.error(message);
+                        throw new CompletionException(new DriverException(message));
+                    }
+                    return null;
+                });
     }
 
     private boolean isSuccess(int responseCode) {

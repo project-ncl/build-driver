@@ -26,7 +26,6 @@ import lombok.Builder;
 import lombok.Data;
 import org.jboss.pnc.api.dto.Request;
 
-
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
  */

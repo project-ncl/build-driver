@@ -75,9 +75,7 @@ public class LoggingFilter implements ContainerRequestFilter, ContainerResponseF
     }
 
     @Override
-    public void filter(
-            ContainerRequestContext requestContext,
-            ContainerResponseContext responseContext)
+    public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext)
             throws IOException {
         Long startTime = (Long) requestContext.getProperty(REQUEST_EXECUTION_START);
 
@@ -89,10 +87,8 @@ public class LoggingFilter implements ContainerRequestFilter, ContainerResponseF
         }
 
         try (MDC.MDCCloseable mdcTook = MDC.putCloseable(MDCKeys.REQUEST_TOOK, took);
-                MDC.MDCCloseable mdcStatus = MDC.putCloseable(
-                        MDCKeys.RESPONSE_STATUS,
-                        Integer.toString(responseContext.getStatus()));
-        ) {
+                MDC.MDCCloseable mdcStatus = MDC
+                        .putCloseable(MDCKeys.RESPONSE_STATUS, Integer.toString(responseContext.getStatus()));) {
             logger.debug("Completed {}, took: {}ms.", requestContext.getUriInfo().getPath(), took);
         }
     }
