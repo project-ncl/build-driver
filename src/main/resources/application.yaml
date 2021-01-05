@@ -1,0 +1,55 @@
+quarkus:
+  log:
+    category:
+      "org.jboss.pnc":
+        level: DEBUG
+    console:
+      format: "%d{HH:mm:ss,SSS} %-5p [%c{3.}] (%t) %s%e mdc:[%X]%n"
+
+# OIDC Configuration //TODO
+#quarkus.oidc.auth-server-url=https://host/auth/realms/pncredhat
+#quarkus.oidc.client-id=pnc-orchestrator
+#quarkus.oidc.credentials.secret=abc-def-ghi
+#quarkus.oidc.tls.verification=none
+
+#quarkus.oauth2.client-id=client-id
+#quarkus.oauth2.client-secret=client-secret
+#quarkus.oauth2.introspection-url=http://host:port/introspect
+
+# Enable Policy Enforcement
+#quarkus.keycloak.policy-enforcer.enable=false
+
+build-driver:
+  self-base-url: http://localhost:8081/
+  script-template: |
+    echo 'cd %{workingDirectory}/%{projectName}' >> $${HOME}/.bashrc
+    set -xe
+    cd %{workingDirectory}
+    git clone %{scmUrl} %{projectName}
+    cd %{projectName}
+    git reset --hard %{scmRevision}
+    %{command}
+
+"%test":
+  build-driver:
+    self-base-url: http://localhost:8081/
+    script-template: |
+      set -xe
+      cd %{workingDirectory}
+      %{command}
+  quarkus:
+    oidc:
+      enabled: false
+    security:
+      users: #TODO remove if not required
+        embedded:
+          enabled: true
+          plain-text: true
+          users:
+            scott: reader
+            stuart: writer
+          roles:
+            scott: READER
+            stuart: READER,WRITER
+    oauth2:
+      enabled: false
