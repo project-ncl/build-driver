@@ -54,7 +54,7 @@ public class Public {
     /**
      * Triggers the build execution for a given configuration.
      */
-    // @Authenticated
+    @Authenticated
     @POST
     @Path("/build")
     public CompletionStage<BuildResponse> build(BuildRequest buildRequest) {
