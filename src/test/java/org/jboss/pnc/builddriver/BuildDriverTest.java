@@ -90,7 +90,7 @@ public class BuildDriverTest {
 
         callbackServer = new HttpServer();
 
-        Consumer<BuildCompleted> completedBuildConsumer = (b) -> completedBuilds.add(b);
+        Consumer<BuildCompleted> completedBuildConsumer = completedBuilds::add;
         CallbackServletFactory callbackServletFactory = new CallbackServletFactory(completedBuildConsumer);
         callbackServer.addServlet(CallbackHandler.class, Optional.of(callbackServletFactory));
         callbackServer.start(8082, BIND_HOST);
@@ -109,7 +109,7 @@ public class BuildDriverTest {
         Request callback = new Request(
                 Request.Method.POST,
                 new URI("http://localhost:8082/" + CallbackHandler.class.getSimpleName()),
-                Collections.singleton(new Request.Header(Headers.CONTENT_TYPE_STRING, MediaType.APPLICATION_JSON)));
+                Collections.singletonList(new Request.Header(Headers.CONTENT_TYPE_STRING, MediaType.APPLICATION_JSON)));
 
         BuildRequest buildRequest = new BuildRequest(
                 "the-build",
@@ -151,7 +151,7 @@ public class BuildDriverTest {
         Request callback = new Request(
                 Request.Method.POST,
                 new URI("http://localhost:8082/" + CallbackHandler.class.getSimpleName()),
-                Collections.singleton(new Request.Header(Headers.CONTENT_TYPE_STRING, MediaType.APPLICATION_JSON)));
+                Collections.singletonList(new Request.Header(Headers.CONTENT_TYPE_STRING, MediaType.APPLICATION_JSON)));
 
         BuildRequest buildRequest = new BuildRequest(
                 "the-build",
@@ -183,15 +183,12 @@ public class BuildDriverTest {
                 baseBuildAgentUri.toString());
 
         // cancel the build
+        // cancel headers are not part of the test, inspect the log for MDC (look at /cancel)
         RequestSpecification requestSpecification = given().contentType(MediaType.APPLICATION_JSON);
         buildResponse.getCancel()
                 .getHeaders()
-                .stream()
-                .forEach(header -> requestSpecification.header(header.getName(), header.getValue())); // not part of the
-                                                                                                      // test, inspect
-                                                                                                      // the log for MDC
-                                                                                                      // (look at
-                                                                                                      // /cancel)
+                .forEach(header -> requestSpecification.header(header.getName(), header.getValue()));
+
         requestSpecification.body(cancelRequest).when().put(receivedCancel.getUri()).then().statusCode(200);
 
         logger.info("Waiting for result ...");
@@ -208,7 +205,7 @@ public class BuildDriverTest {
         Request invokerCallback = new Request(
                 Request.Method.POST,
                 new URI("http://localhost:8082/not-found/" + CallbackHandler.class.getSimpleName()),
-                Collections.singleton(new Request.Header(Headers.CONTENT_TYPE_STRING, MediaType.APPLICATION_JSON)));
+                Collections.singletonList(new Request.Header(Headers.CONTENT_TYPE_STRING, MediaType.APPLICATION_JSON)));
 
         CallbackContext context = CallbackContext.builder()
                 .invokerCallback(invokerCallback)

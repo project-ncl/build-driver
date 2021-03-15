@@ -24,6 +24,7 @@ import org.apache.commons.text.StringSubstitutor;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.jboss.pnc.api.constants.MDCHeaderKeys;
 import org.jboss.pnc.api.dto.Request;
 import org.jboss.pnc.buildagent.api.TaskStatusUpdateEvent;
 import org.jboss.pnc.buildagent.client.BuildAgentClient;
@@ -39,7 +40,6 @@ import org.jboss.pnc.builddriver.dto.CallbackContext;
 import org.jboss.pnc.builddriver.dto.CancelRequest;
 import org.jboss.pnc.builddriver.dto.Status;
 import org.jboss.pnc.common.Strings;
-import org.jboss.pnc.common.constants.MDCHeaderKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -54,10 +54,10 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -119,7 +119,7 @@ public class Driver {
     }
 
     public CompletableFuture<BuildResponse> start(BuildRequest buildRequest) {
-        Set<Request.Header> headers = getHeaders();
+        List<Request.Header> headers = getHeaders();
 
         Request executionCompletedCallback;
         try {
@@ -326,8 +326,8 @@ public class Driver {
         return StringSubstitutor.replace(scriptTemplate, values, "%{", "}");
     }
 
-    private Set<Request.Header> getHeaders() {
-        Set<Request.Header> headers = new HashSet<>();
+    private List<Request.Header> getHeaders() {
+        List<Request.Header> headers = new ArrayList<>();
         headers.add(new Request.Header(Headers.CONTENT_TYPE_STRING, MediaType.APPLICATION_JSON));
         if (webToken.getRawToken() != null) {
             headers.add(new Request.Header(Headers.AUTHORIZATION_STRING, "Bearer " + webToken.getRawToken()));
@@ -339,7 +339,7 @@ public class Driver {
         return headers;
     }
 
-    private void headersFromMdc(Set<Request.Header> headers, MDCHeaderKeys headerKey) {
+    private void headersFromMdc(List<Request.Header> headers, MDCHeaderKeys headerKey) {
         String mdcValue = MDC.get(headerKey.getMdcKey());
         if (!Strings.isEmpty(mdcValue)) {
             headers.add(new Request.Header(headerKey.getHeaderName(), mdcValue));

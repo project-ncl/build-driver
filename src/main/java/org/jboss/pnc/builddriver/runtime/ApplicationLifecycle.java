@@ -20,6 +20,8 @@ package org.jboss.pnc.builddriver.runtime;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.pnc.common.concurrent.Sequence;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
@@ -30,13 +32,16 @@ import javax.enterprise.event.Observes;
 @ApplicationScoped
 public class ApplicationLifecycle {
 
-    // @ConfigProperty(name = "sequenceGenerator.nodeId", defaultValue = "0") //max 1023
-    // int nodeId;
+    @ConfigProperty(name = "sequenceGenerator.nodeId", defaultValue = "-1") // nodeId + nodeIdOffset must be < 1024
+    int nodeId;
+
+    @ConfigProperty(name = "sequenceGenerator.nodeIdOffset", defaultValue = "0") // nodeId + nodeIdOffset must be < 1024
+    int nodeIdOffset;
 
     void onStart(@Observes StartupEvent event) {
-        // two instances of the same application will use the same if
-        // get the deployment meta-data (env var) based id
-        // Sequence.setNodeId(nodeId);
+        if (nodeId > -1) {
+            Sequence.setNodeId(nodeIdOffset + nodeId);
+        }
     }
 
     void onStop(@Observes ShutdownEvent event) {
