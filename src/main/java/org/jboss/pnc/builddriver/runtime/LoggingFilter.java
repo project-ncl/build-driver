@@ -19,10 +19,10 @@
 package org.jboss.pnc.builddriver.runtime;
 
 import io.quarkus.security.identity.SecurityIdentity;
+import org.jboss.pnc.api.constants.MDCHeaderKeys;
+import org.jboss.pnc.api.constants.MDCKeys;
 import org.jboss.pnc.common.Strings;
 import org.jboss.pnc.common.concurrent.Sequence;
-import org.jboss.pnc.common.constants.MDCHeaderKeys;
-import org.jboss.pnc.common.constants.MDCKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -94,11 +94,10 @@ public class LoggingFilter implements ContainerRequestFilter, ContainerResponseF
     }
 
     private void headerToMap(
-            Map<String, String> mdcContext,
+            Map<String, String> map,
             MDCHeaderKeys headerKeys,
             ContainerRequestContext requestContext) {
-        String value = requestContext.getHeaderString(headerKeys.getHeaderName());
-        mdcContext.put(headerKeys.getMdcKey(), value);
+        headerToMap(map, headerKeys, requestContext, () -> null);
     }
 
     private void headerToMap(
