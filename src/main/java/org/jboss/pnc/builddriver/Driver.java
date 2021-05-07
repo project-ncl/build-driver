@@ -24,8 +24,14 @@ import org.apache.commons.text.StringSubstitutor;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.jboss.pnc.api.builddriver.dto.BuildCancelRequest;
+import org.jboss.pnc.api.builddriver.dto.BuildCompleted;
+import org.jboss.pnc.api.builddriver.dto.BuildRequest;
+import org.jboss.pnc.api.builddriver.dto.BuildResponse;
 import org.jboss.pnc.api.constants.MDCHeaderKeys;
 import org.jboss.pnc.api.dto.Request;
+import org.jboss.pnc.api.enums.ResultStatus;
+import org.jboss.pnc.buildagent.api.Status;
 import org.jboss.pnc.buildagent.api.TaskStatusUpdateEvent;
 import org.jboss.pnc.buildagent.client.BuildAgentClient;
 import org.jboss.pnc.buildagent.client.BuildAgentClientException;
@@ -33,12 +39,7 @@ import org.jboss.pnc.buildagent.client.BuildAgentHttpClient;
 import org.jboss.pnc.buildagent.client.HttpClientConfiguration;
 import org.jboss.pnc.buildagent.common.http.HttpClient;
 import org.jboss.pnc.buildagent.common.http.StringResult;
-import org.jboss.pnc.builddriver.dto.BuildCompleted;
-import org.jboss.pnc.builddriver.dto.BuildRequest;
-import org.jboss.pnc.builddriver.dto.BuildResponse;
 import org.jboss.pnc.builddriver.dto.CallbackContext;
-import org.jboss.pnc.builddriver.dto.CancelRequest;
-import org.jboss.pnc.builddriver.dto.Status;
 import org.jboss.pnc.common.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,9 +61,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-
-import static org.jboss.pnc.builddriver.dto.Status.FAILED;
-import static org.jboss.pnc.builddriver.dto.Status.SYSTEM_ERROR;
 
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
@@ -188,7 +186,6 @@ public class Driver {
     }
 
     public CompletableFuture<Void> completed(TaskStatusUpdateEvent event) {
-
         // context is de-serialized as HashMap
         CallbackContext context = objectMapper.convertValue(event.getContext(), CallbackContext.class);
 
@@ -240,7 +237,7 @@ public class Driver {
                                     + maxLogSize + " -----\n");
                     return new BuildCompleted(
                             logBuilder.toString(),
-                            FAILED,
+                            ResultStatus.FAILED,
                             event.getOutputChecksum(),
                             debugEnabled,
                             null);
@@ -249,23 +246,23 @@ public class Driver {
 
             return new BuildCompleted(
                     logBuilder.toString(),
-                    Status.valueOf(status.name()),
+                    TypeConverters.toResultStatus(status),
                     event.getOutputChecksum(),
                     debugEnabled,
                     null);
         }, executor).handleAsync((completedBuild, throwable) -> {
             if (throwable != null) {
-                return completedBuild.toBuilder().throwable(throwable).status(SYSTEM_ERROR).build();
+                return completedBuild.toBuilder().throwable(throwable).buildStatus(ResultStatus.SYSTEM_ERROR).build();
             } else {
                 return completedBuild;
             }
         }, executor).thenCompose(completedBuild -> notifyInvoker(completedBuild, invokerCallback));
     }
 
-    public CompletableFuture<HttpClient.Response> cancel(CancelRequest cancelRequest) {
+    public CompletableFuture<HttpClient.Response> cancel(BuildCancelRequest buildCancelRequest) {
         return CompletableFuture.supplyAsync(() -> {
             HttpClientConfiguration clientConfiguration = HttpClientConfiguration.newBuilder()
-                    .termBaseUrl(cancelRequest.getBuildEnvironmentBaseUrl())
+                    .termBaseUrl(buildCancelRequest.getBuildEnvironmentBaseUrl())
                     .build();
 
             try {
@@ -274,7 +271,7 @@ public class Driver {
                 throw new CompletionException("Cannot create build agent client.", e);
             }
 
-        }).thenCompose(buildAgentClient -> buildAgentClient.cancel(cancelRequest.getBuildExecutionId()));
+        }).thenCompose(buildAgentClient -> buildAgentClient.cancel(buildCancelRequest.getBuildExecutionId()));
     }
 
     private CompletableFuture<Void> notifyInvoker(BuildCompleted buildCompleted, Request callback) {

@@ -22,14 +22,15 @@ import io.quarkus.test.security.TestSecurity;
 import io.restassured.RestAssured;
 import io.restassured.specification.RequestSpecification;
 import io.undertow.util.Headers;
+import org.jboss.pnc.api.builddriver.dto.BuildCancelRequest;
+import org.jboss.pnc.api.builddriver.dto.BuildCompleted;
+import org.jboss.pnc.api.builddriver.dto.BuildRequest;
+import org.jboss.pnc.api.builddriver.dto.BuildResponse;
 import org.jboss.pnc.api.dto.Request;
+import org.jboss.pnc.api.enums.ResultStatus;
 import org.jboss.pnc.buildagent.api.TaskStatusUpdateEvent;
 import org.jboss.pnc.builddriver.buildagent.Server;
-import org.jboss.pnc.builddriver.dto.BuildCompleted;
-import org.jboss.pnc.builddriver.dto.BuildRequest;
-import org.jboss.pnc.builddriver.dto.BuildResponse;
 import org.jboss.pnc.builddriver.dto.CallbackContext;
-import org.jboss.pnc.builddriver.dto.CancelRequest;
 import org.jboss.pnc.builddriver.invokerserver.CallbackHandler;
 import org.jboss.pnc.builddriver.invokerserver.CallbackServletFactory;
 import org.jboss.pnc.builddriver.invokerserver.HttpServer;
@@ -56,8 +57,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.function.Consumer;
 
 import static io.restassured.RestAssured.given;
-import static org.jboss.pnc.builddriver.dto.Status.COMPLETED;
-import static org.jboss.pnc.builddriver.dto.Status.INTERRUPTED;
 
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
@@ -139,7 +138,7 @@ public class BuildDriverTest {
         logger.info("Waiting for result ...");
         BuildCompleted buildCompleted = completedBuilds.take();
         logger.info("Received {}.", buildCompleted);
-        Assertions.assertEquals(COMPLETED, buildCompleted.getStatus());
+        Assertions.assertEquals(ResultStatus.SUCCESS, buildCompleted.getBuildStatus());
     }
 
     @ParameterizedTest
@@ -178,7 +177,7 @@ public class BuildDriverTest {
         Request receivedCancel = buildResponse.getCancel();
         Assertions.assertNotNull(receivedCancel.getUri());
 
-        CancelRequest cancelRequest = new CancelRequest(
+        BuildCancelRequest buildCancelRequest = new BuildCancelRequest(
                 buildResponse.getBuildExecutionId(),
                 baseBuildAgentUri.toString());
 
@@ -189,12 +188,12 @@ public class BuildDriverTest {
                 .getHeaders()
                 .forEach(header -> requestSpecification.header(header.getName(), header.getValue()));
 
-        requestSpecification.body(cancelRequest).when().put(receivedCancel.getUri()).then().statusCode(200);
+        requestSpecification.body(buildCancelRequest).when().put(receivedCancel.getUri()).then().statusCode(200);
 
         logger.info("Waiting for result ...");
         BuildCompleted buildCompleted = completedBuilds.take();
         logger.info("Received {}.", buildCompleted);
-        Assertions.assertEquals(INTERRUPTED, buildCompleted.getStatus());
+        Assertions.assertEquals(ResultStatus.CANCELLED, buildCompleted.getBuildStatus());
         Assertions.assertEquals(debugEnabled, buildCompleted.isDebugEnabled());
     }
 

@@ -19,10 +19,10 @@
 package org.jboss.pnc.builddriver.endpoints;
 
 import io.quarkus.security.Authenticated;
+import org.jboss.pnc.api.builddriver.dto.BuildCancelRequest;
+import org.jboss.pnc.api.builddriver.dto.BuildRequest;
+import org.jboss.pnc.api.builddriver.dto.BuildResponse;
 import org.jboss.pnc.builddriver.Driver;
-import org.jboss.pnc.builddriver.dto.BuildRequest;
-import org.jboss.pnc.builddriver.dto.BuildResponse;
-import org.jboss.pnc.builddriver.dto.CancelRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,8 +68,8 @@ public class Public {
     @Authenticated
     @PUT
     @Path("/cancel")
-    public CompletionStage<Response> cancel(CancelRequest cancelRequest) {
-        logger.info("Requested cancel: {}", cancelRequest.getBuildExecutionId());
-        return driver.cancel(cancelRequest).thenApply((r) -> Response.status(r.getCode()).build());
+    public CompletionStage<Response> cancel(BuildCancelRequest buildCancelRequest) {
+        logger.info("Requested cancel: {}", buildCancelRequest.getBuildExecutionId());
+        return driver.cancel(buildCancelRequest).thenApply((r) -> Response.status(r.getCode()).build());
     }
 }

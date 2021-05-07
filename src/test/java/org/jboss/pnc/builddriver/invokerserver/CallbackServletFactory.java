@@ -21,7 +21,7 @@ package org.jboss.pnc.builddriver.invokerserver;
 import io.undertow.servlet.api.InstanceFactory;
 import io.undertow.servlet.api.InstanceHandle;
 import io.undertow.servlet.util.ImmediateInstanceHandle;
-import org.jboss.pnc.builddriver.dto.BuildCompleted;
+import org.jboss.pnc.api.builddriver.dto.BuildCompleted;
 
 import java.util.function.Consumer;
 
