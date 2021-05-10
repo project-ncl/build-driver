@@ -16,30 +16,27 @@
  * limitations under the License.
  */
 
-package org.jboss.pnc.builddriver.dto;
+package org.jboss.pnc.builddriver;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import org.jboss.pnc.api.dto.Request;
+import org.jboss.pnc.api.enums.ResultStatus;
+import org.jboss.pnc.buildagent.api.Status;
 
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
  */
-@AllArgsConstructor
-@Data
-@Builder(builderClassName = "Builder")
-@JsonDeserialize(builder = BuildResponse.Builder.class)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class BuildResponse {
-    private final Request cancel;
-    private final String buildExecutionId;
-
-    @JsonPOJOBuilder(withPrefix = "")
-    public static final class Builder {
+public class TypeConverters {
+    public static ResultStatus toResultStatus(Status status) {
+        switch (status) {
+            case COMPLETED:
+                return ResultStatus.SUCCESS;
+            case FAILED:
+                return ResultStatus.FAILED;
+            case INTERRUPTED:
+                return ResultStatus.CANCELLED;
+            case SYSTEM_ERROR:
+                return ResultStatus.SYSTEM_ERROR;
+            default:
+                throw new java.util.NoSuchElementException("Cannot convert " + status.name() + " to ResultStatus.");
+        }
     }
-
 }
