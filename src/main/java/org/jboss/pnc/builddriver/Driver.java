@@ -48,7 +48,6 @@ import org.slf4j.MDC;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
@@ -110,11 +109,8 @@ public class Driver {
     @ConfigProperty(name = "build-driver.max-log-size", defaultValue = "94371840") // = 90 * 1024 * 1024 = 90MB
     int maxLogSize;
 
-    private final HttpClient httpClient;
-
-    public Driver() throws IOException {
-        httpClient = new HttpClient();
-    }
+    @Inject
+    HttpClient httpClient;
 
     public CompletableFuture<BuildResponse> start(BuildRequest buildRequest) {
         List<Request.Header> headers = getHeaders();
