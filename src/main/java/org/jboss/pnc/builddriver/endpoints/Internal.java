@@ -48,8 +48,8 @@ public class Internal {
     Driver driver;
 
     /**
-     * Used by Build Agent to notify completion.
-     * Response to Build Agent is returned when the result is sent to the invoker who started the build.
+     * Used by Build Agent to notify completion. Response to Build Agent is returned when the result is sent to the
+     * invoker who started the build.
      *
      * @param updateEvent
      * @return

@@ -52,8 +52,8 @@ public class Public {
     Driver driver;
 
     /**
-     * Triggers the build execution for a given configuration.
-     * Method returns when the build is running in a remote build environment.
+     * Triggers the build execution for a given configuration. Method returns when the build is running in a remote
+     * build environment.
      */
     @Authenticated
     @POST

@@ -176,7 +176,9 @@ public class Driver {
                     } catch (URISyntaxException e) {
                         throw new CompletionException(new DriverException("Cannot construct cancel URL.", e));
                     }
-                    BuildCancelRequest cancelRequest = new BuildCancelRequest(sessionId, buildRequest.getEnvironmentBaseUrl());
+                    BuildCancelRequest cancelRequest = new BuildCancelRequest(
+                            sessionId,
+                            buildRequest.getEnvironmentBaseUrl());
                     Request cancel = new Request(Request.Method.PUT, buildCancelUrl, headers, cancelRequest);
                     return new BuildResponse(cancel, sessionId);
                 }, executor);
