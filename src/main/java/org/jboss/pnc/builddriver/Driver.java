@@ -256,18 +256,16 @@ public class Driver {
     }
 
     public CompletableFuture<HttpClient.Response> cancel(BuildCancelRequest buildCancelRequest) {
-        return CompletableFuture.supplyAsync(() -> {
-            HttpClientConfiguration clientConfiguration = HttpClientConfiguration.newBuilder()
-                    .termBaseUrl(buildCancelRequest.getBuildEnvironmentBaseUrl())
-                    .build();
-
-            try {
-                return new BuildAgentHttpClient(httpClient, clientConfiguration);
-            } catch (BuildAgentClientException e) {
-                throw new CompletionException("Cannot create build agent client.", e);
-            }
-
-        }).thenCompose(buildAgentClient -> buildAgentClient.cancel(buildCancelRequest.getBuildExecutionId()));
+        HttpClientConfiguration clientConfiguration = HttpClientConfiguration.newBuilder()
+                .termBaseUrl(buildCancelRequest.getBuildEnvironmentBaseUrl())
+                .build();
+        BuildAgentClient buildAgentClient;
+        try {
+            buildAgentClient = new BuildAgentHttpClient(httpClient, clientConfiguration);
+        } catch (BuildAgentClientException e) {
+            throw new CompletionException("Cannot create build agent client.", e);
+        }
+        return buildAgentClient.cancel(buildCancelRequest.getBuildExecutionId());
     }
 
     private CompletableFuture<Void> notifyInvoker(BuildCompleted buildCompleted, Request callback) {
