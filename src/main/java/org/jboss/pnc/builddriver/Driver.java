@@ -47,6 +47,7 @@ import org.slf4j.MDC;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -55,6 +56,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -136,6 +138,7 @@ public class Driver {
                 .callback(executionCompletedCallback)
                 .termBaseUrl(buildRequest.getEnvironmentBaseUrl())
                 .heartbeatConfig(java.util.Optional.ofNullable(buildRequest.getHeartbeatConfig()))
+                .requestHeaders(getRequestHeaders())
                 .build();
         BuildAgentClient buildAgentClient;
         try {
@@ -184,6 +187,11 @@ public class Driver {
                 }, executor);
     }
 
+    private List<Request.Header> getRequestHeaders() {
+        return Collections
+                .singletonList(new Request.Header(HttpHeaders.AUTHORIZATION, "Bearer " + webToken.getRawToken()));
+    }
+
     public CompletableFuture<Void> completed(TaskStatusUpdateEvent event) {
         // context is de-serialized as HashMap
         CallbackContext context = objectMapper.convertValue(event.getContext(), CallbackContext.class);
@@ -194,6 +202,7 @@ public class Driver {
 
         HttpClientConfiguration clientConfiguration = HttpClientConfiguration.newBuilder()
                 .termBaseUrl(context.getEnvironmentBaseUrl())
+                .requestHeaders(getRequestHeaders())
                 .build();
         BuildAgentClient buildAgentClient;
         try {
@@ -261,6 +270,7 @@ public class Driver {
     public CompletableFuture<HttpClient.Response> cancel(BuildCancelRequest buildCancelRequest) {
         HttpClientConfiguration clientConfiguration = HttpClientConfiguration.newBuilder()
                 .termBaseUrl(buildCancelRequest.getBuildEnvironmentBaseUrl())
+                .requestHeaders(getRequestHeaders())
                 .build();
         BuildAgentClient buildAgentClient;
         try {
