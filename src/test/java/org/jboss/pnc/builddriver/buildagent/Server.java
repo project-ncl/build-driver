@@ -62,7 +62,7 @@ public class Server {
     public static void startServer(String host, int port, String bindPath, Optional<Path> logFolder) {
         try {
             IoLoggerName[] primaryLoggers = { IoLoggerName.FILE };
-            Options options = new Options(host, port, bindPath, false, true, 3, 100);
+            Options options = new Options(host, port, bindPath, false, true, 3, 100, "");
             Map<String, String> mdcMap = new HashMap<>();
             mdcMap.put("ctx", RandomUtils.randString(6));
             buildAgent = new BuildAgentServer(logFolder, Optional.empty(), primaryLoggers, options, mdcMap);
