@@ -7,6 +7,14 @@ quarkus:
         level: DEBUG
     console:
       format: "%d{HH:mm:ss,SSS} %-5p [%c{3.}] (%t) %s%e mdc:[%X]%n"
+    handler:
+      kafka:
+        enabled: false
+        broker-list: kafka.example.com:443
+        topic: kafka-topic
+        security-protocol: SSL
+        ssl-truststore-location: /mnt/kafka-client-truststore.jks
+        ssl-truststore-password: none
   oidc:
     auth-server-url: https://keycloak-host/auth/realms/my-realm
     client-id: my-client-id
