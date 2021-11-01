@@ -62,6 +62,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
@@ -254,7 +256,7 @@ public class Driver {
 
             return new BuildCompleted(
                     logBuilder.toString(),
-                    TypeConverters.toResultStatus(status),
+                    TypeConverters.toResultStatus(overrideStatusFromLogs(logBuilder, status)),
                     event.getOutputChecksum(),
                     debugEnabled,
                     null);
@@ -265,6 +267,37 @@ public class Driver {
                 return completedBuild;
             }
         }, executor).thenCompose(completedBuild -> notifyInvoker(completedBuild, invokerCallback));
+    }
+
+    /**
+     * Override the final status state based on the builder logs. If a specific pattern is matched from the logs, the
+     * final status may be overridden
+     *
+     * This method is written in a generic fashion to allow any override of status. However, right now it only handles
+     * the case where the logs have "Indy Connection refused" message.
+     *
+     * @param logBuilder logs
+     * @param currentStatus
+     * @return Updated status
+     */
+    static Status overrideStatusFromLogs(StringBuilder logBuilder, Status currentStatus) {
+
+        // NCL-6736: We only want to override the status if we are in status FAILED for Indy connection refused
+        if (currentStatus != Status.FAILED) {
+            return currentStatus;
+        }
+
+        // NCL-6736: Check if we have and indy connection refused in our logs
+        Pattern p = Pattern.compile("Connect to indy.* failed: Connection refused");
+        Matcher m = p.matcher(logBuilder);
+
+        if (m.find()) {
+            Status newStatus = Status.SYSTEM_ERROR;
+            logger.info("Overriding status from {} to {} due to Indy connection refused", currentStatus, newStatus);
+            return newStatus;
+        } else {
+            return currentStatus;
+        }
     }
 
     public CompletableFuture<HttpClient.Response> cancel(BuildCancelRequest buildCancelRequest) {
