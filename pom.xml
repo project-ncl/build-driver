@@ -70,6 +70,7 @@
     <quarkus-logging-kafka.version>1.0.0</quarkus-logging-kafka.version>
     <version.javadoc.plugin>3.3.1</version.javadoc.plugin>
     <version.source.plugin>3.2.1</version.source.plugin>
+    <quarkus.package.type>uber-jar</quarkus.package.type>
     <tagSuffix />
   </properties>
   <dependencyManagement>
@@ -203,6 +204,9 @@
         <artifactId>quarkus-maven-plugin</artifactId>
         <version>${quarkus-plugin.version}</version>
         <extensions>true</extensions>
+        <configuration>
+            <finalName>build-driver</finalName>
+        </configuration>
         <executions>
           <execution>
             <goals>
