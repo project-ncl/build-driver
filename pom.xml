@@ -69,6 +69,9 @@
     <compiler-plugin.version>3.8.1</compiler-plugin.version>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
     <quarkus-logging-kafka.version>1.0.0-SNAPSHOT</quarkus-logging-kafka.version>
+    <version.javadoc.plugin>3.3.1</version.javadoc.plugin>
+    <version.source.plugin>3.2.1</version.source.plugin>
+    <tagSuffix />
   </properties>
   <dependencyManagement>
     <dependencies>
