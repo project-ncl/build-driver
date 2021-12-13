@@ -262,7 +262,8 @@ public class Driver {
                     null);
         }, executor).handleAsync((completedBuild, throwable) -> {
             if (throwable != null) {
-                return completedBuild.toBuilder().throwable(throwable).buildStatus(ResultStatus.SYSTEM_ERROR).build();
+                logger.error("Completing with SYSTEM_ERROR.", throwable);
+                return BuildCompleted.builder().throwable(throwable).buildStatus(ResultStatus.SYSTEM_ERROR).build();
             } else {
                 return completedBuild;
             }
