@@ -263,7 +263,11 @@ public class Driver {
         }, executor).handleAsync((completedBuild, throwable) -> {
             if (throwable != null) {
                 logger.error("Completing with SYSTEM_ERROR.", throwable);
-                return BuildCompleted.builder().throwable(throwable).buildStatus(ResultStatus.SYSTEM_ERROR).build();
+                return BuildCompleted.builder()
+                        .buildLog(throwable.getMessage())
+                        .throwable(throwable)
+                        .buildStatus(ResultStatus.SYSTEM_ERROR)
+                        .build();
             } else {
                 return completedBuild;
             }
