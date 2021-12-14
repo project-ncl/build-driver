@@ -127,12 +127,12 @@
     <dependency>
       <groupId>org.jboss.pnc.build-agent</groupId>
       <artifactId>client</artifactId>
-      <version>1.0.2</version>
+      <version>1.0.3-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.pnc.build-agent</groupId>
       <artifactId>server</artifactId>
-      <version>1.0.2</version>
+      <version>1.0.3-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>
