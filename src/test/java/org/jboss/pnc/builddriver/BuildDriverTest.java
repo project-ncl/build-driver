@@ -37,6 +37,7 @@ import org.jboss.pnc.builddriver.invokerserver.HttpServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -222,6 +223,47 @@ public class BuildDriverTest {
                 .put("/internal/completed")
                 .then()
                 .statusCode(500);
+    }
+
+    @Test
+    @Disabled
+    public void shouldCutLongLog() throws InterruptedException, URISyntaxException {
+
+        Request callback = new Request(
+                Request.Method.POST,
+                new URI("http://localhost:8082/" + CallbackHandler.class.getSimpleName()),
+                Collections.singletonList(new Request.Header(Headers.CONTENT_TYPE_STRING, MediaType.APPLICATION_JSON)));
+
+        String command = "set +ex\n" + "cat /tmp/log-100MB.log;" + "sleep 5;";
+        BuildRequest buildRequest = new BuildRequest(
+                "the-build",
+                "not-used",
+                "not-used",
+                command,
+                workingDirectory.toString(),
+                baseBuildAgentUri.toString(),
+                callback,
+                false,
+                null);
+
+        // start the build
+        BuildResponse buildResponse = given().contentType(MediaType.APPLICATION_JSON)
+                .body(buildRequest)
+                .when()
+                .post("/build")
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(BuildResponse.class);
+
+        Request receivedCancel = buildResponse.getCancel();
+        Assertions.assertNotNull(receivedCancel.getUri());
+
+        logger.info("Waiting for result ...");
+        BuildCompleted buildCompleted = completedBuilds.take();
+        logger.info("Received {}.", buildCompleted);
+        Assertions.assertEquals(ResultStatus.FAILED, buildCompleted.getBuildStatus());
     }
 
 }
