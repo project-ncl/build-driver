@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import org.jboss.pnc.api.dto.HeartbeatConfig;
 import org.jboss.pnc.api.dto.Request;
 
 /**
@@ -39,6 +40,7 @@ public class CallbackContext {
     private final Request invokerCallback;
     private final boolean enableDebugOnFailure;
     private final String environmentBaseUrl;
+    private final HeartbeatConfig heartbeatConfig;
 
     @JsonPOJOBuilder(withPrefix = "")
     public static final class Builder {

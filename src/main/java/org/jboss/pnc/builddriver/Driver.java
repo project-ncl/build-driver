@@ -29,6 +29,7 @@ import org.jboss.pnc.api.builddriver.dto.BuildCompleted;
 import org.jboss.pnc.api.builddriver.dto.BuildRequest;
 import org.jboss.pnc.api.builddriver.dto.BuildResponse;
 import org.jboss.pnc.api.constants.MDCHeaderKeys;
+import org.jboss.pnc.api.dto.HeartbeatConfig;
 import org.jboss.pnc.api.dto.Request;
 import org.jboss.pnc.api.enums.ResultStatus;
 import org.jboss.pnc.buildagent.api.Status;
@@ -37,6 +38,7 @@ import org.jboss.pnc.buildagent.client.BuildAgentClient;
 import org.jboss.pnc.buildagent.client.BuildAgentClientException;
 import org.jboss.pnc.buildagent.client.BuildAgentHttpClient;
 import org.jboss.pnc.buildagent.client.HttpClientConfiguration;
+import org.jboss.pnc.buildagent.common.http.HeartbeatSender;
 import org.jboss.pnc.buildagent.common.http.HttpClient;
 import org.jboss.pnc.buildagent.common.http.StringResult;
 import org.jboss.pnc.builddriver.dto.CallbackContext;
@@ -60,8 +62,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -116,6 +120,9 @@ public class Driver {
     @Inject
     HttpClient httpClient;
 
+    @Inject
+    HeartbeatSender heartbeatSender;
+
     public CompletableFuture<BuildResponse> start(BuildRequest buildRequest) {
         List<Request.Header> headers = getHeaders();
 
@@ -125,7 +132,8 @@ public class Driver {
                     buildRequest.getWorkingDirectory(),
                     buildRequest.getCompletionCallback(),
                     buildRequest.isDebugEnabled(),
-                    buildRequest.getEnvironmentBaseUrl());
+                    buildRequest.getEnvironmentBaseUrl(),
+                    buildRequest.getHeartbeatConfig());
 
             executionCompletedCallback = new Request(
                     Request.Method.PUT,
@@ -196,14 +204,30 @@ public class Driver {
 
     public CompletableFuture<Void> completed(TaskStatusUpdateEvent event) {
         // context is de-serialized as HashMap
-        CallbackContext context = objectMapper.convertValue(event.getContext(), CallbackContext.class);
+        CallbackContext callbackContext = objectMapper.convertValue(event.getContext(), CallbackContext.class);
+        HeartbeatConfig heartbeatConfig = callbackContext.getHeartbeatConfig();
+        // take over heartbeat not to fail in case of long-running result processing
+        Optional<Future<?>> heartBeatSchedule;
+        if (heartbeatConfig != null) {
+            heartBeatSchedule = Optional.of(heartbeatSender.start(heartbeatConfig));
+        } else {
+            heartBeatSchedule = Optional.empty();
+        }
+        return doCompleted(event.getNewStatus(), event.getOutputChecksum(), callbackContext).handleAsync((nul, e) -> {
+            heartBeatSchedule.ifPresent(hb -> hb.cancel(false));
+            if (e != null) {
+                throw new CompletionException("Failed to process completion.", e);
+            }
+            return null;
+        }, executor);
+    }
 
-        String logPath = context.getWorkingDirectory() + "/console.log";
-
-        Request invokerCallback = context.getInvokerCallback();
+    private CompletableFuture<Void> doCompleted(Status status, String outputChecksum, CallbackContext callbackContext) {
+        String logPath = callbackContext.getWorkingDirectory() + "/console.log";
+        Request invokerCallback = callbackContext.getInvokerCallback();
 
         HttpClientConfiguration clientConfiguration = HttpClientConfiguration.newBuilder()
-                .termBaseUrl(context.getEnvironmentBaseUrl())
+                .termBaseUrl(callbackContext.getEnvironmentBaseUrl())
                 .requestHeaders(getRequestHeaders())
                 .build();
         BuildAgentClient buildAgentClient;
@@ -213,13 +237,11 @@ public class Driver {
             return CompletableFuture.failedFuture(e);
         }
 
-        org.jboss.pnc.buildagent.api.Status status = event.getNewStatus();
         final boolean debugEnabled;
         CompletableFuture<String> optionallyEnableSsh;
         logger.debug("Script completionNotifier completed with status {}.", status);
-        if ((status == org.jboss.pnc.buildagent.api.Status.FAILED
-                || status == org.jboss.pnc.buildagent.api.Status.SYSTEM_ERROR
-                || status == org.jboss.pnc.buildagent.api.Status.INTERRUPTED) && context.isEnableDebugOnFailure()) {
+        if ((status == Status.FAILED || status == Status.SYSTEM_ERROR || status == Status.INTERRUPTED)
+                && callbackContext.isEnableDebugOnFailure()) {
             debugEnabled = true;
             optionallyEnableSsh = buildAgentClient.executeAsync("/usr/local/bin/startSshd.sh");
         } else {
@@ -230,48 +252,60 @@ public class Driver {
         return optionallyEnableSsh.thenCompose(s -> {
             logger.debug("Downloading file to String Buffer from {}", logPath);
             return buildAgentClient.downloadFile(Paths.get(logPath), maxLogSize);
-        }).thenApplyAsync(response -> {
+        })
+                .thenApplyAsync(
+                        response -> prepareResult(outputChecksum, logPath, status, debugEnabled, response),
+                        executor)
+                .handleAsync((completedBuild, throwable) -> {
+                    if (throwable != null) {
+                        logger.error("Completing with SYSTEM_ERROR.", throwable);
+                        return BuildCompleted.builder()
+                                .buildLog(throwable.getMessage())
+                                .throwable(throwable)
+                                .buildStatus(ResultStatus.SYSTEM_ERROR)
+                                .build();
+                    } else {
+                        return completedBuild;
+                    }
+                }, executor)
+                .thenCompose(completedBuild -> notifyInvoker(completedBuild, invokerCallback));
+    }
 
-            StringBuilder logBuilder = new StringBuilder();
-            logBuilder.append("==== ").append(logPath).append(" ====\n");
+    private BuildCompleted prepareResult(
+            String outputChecksum,
+            String logPath,
+            Status status,
+            boolean debugEnabled,
+            HttpClient.Response response) {
+        StringBuilder logBuilder = new StringBuilder();
+        logBuilder.append("==== ").append(logPath).append(" ====\n");
 
-            StringResult stringResult = response.getStringResult();
-            logBuilder.append(stringResult.getString());
+        StringResult stringResult = response.getStringResult();
+        logBuilder.append(stringResult.getString());
 
-            if (!stringResult.isComplete()) {
-                logger.warn("\nLog file was not fully downloaded from: {}", logPath);
-                logBuilder.append("----- build log was cut -----\n");
-                if (Status.COMPLETED.equals(status)) { // status is success
-                    logBuilder.append(
-                            "----- build completed successfully but it is marked as failed due to log overflow. Max log size is "
-                                    + maxLogSize + " -----\n");
-                    return new BuildCompleted(
-                            logBuilder.toString(),
-                            ResultStatus.FAILED,
-                            event.getOutputChecksum(),
-                            debugEnabled,
-                            null);
-                }
+        if (!stringResult.isComplete()) {
+            logger.warn("\nLog file was not fully downloaded from: {}", logPath);
+            logBuilder.append("----- build log was cut -----\n");
+            if (Status.COMPLETED.equals(status)) { // status is success
+                logBuilder.append(
+                        String.format(
+                                "----- build completed successfully but it is marked as failed due to log overflow. Max log size is %d -----\n",
+                                maxLogSize));
+                return new BuildCompleted(
+                        logBuilder.toString(),
+                        ResultStatus.FAILED,
+                        outputChecksum,
+                        debugEnabled,
+                        null);
             }
+        }
 
-            return new BuildCompleted(
-                    logBuilder.toString(),
-                    TypeConverters.toResultStatus(overrideStatusFromLogs(logBuilder, status)),
-                    event.getOutputChecksum(),
-                    debugEnabled,
-                    null);
-        }, executor).handleAsync((completedBuild, throwable) -> {
-            if (throwable != null) {
-                logger.error("Completing with SYSTEM_ERROR.", throwable);
-                return BuildCompleted.builder()
-                        .buildLog(throwable.getMessage())
-                        .throwable(throwable)
-                        .buildStatus(ResultStatus.SYSTEM_ERROR)
-                        .build();
-            } else {
-                return completedBuild;
-            }
-        }, executor).thenCompose(completedBuild -> notifyInvoker(completedBuild, invokerCallback));
+        return new BuildCompleted(
+                logBuilder.toString(),
+                TypeConverters.toResultStatus(overrideStatusFromLogs(logBuilder, status)),
+                outputChecksum,
+                debugEnabled,
+                null);
     }
 
     /**
