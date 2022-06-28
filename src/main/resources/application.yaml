@@ -45,3 +45,12 @@ build-driver:
   quarkus:
     oidc:
       enabled: false
+    log:
+      console:
+        json: false
+
+"%dev":
+  quarkus:
+    log:
+      console:
+        json: false
