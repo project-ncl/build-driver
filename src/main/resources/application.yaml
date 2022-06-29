@@ -15,6 +15,9 @@ quarkus:
         security-protocol: SSL
         ssl-truststore-location: /mnt/kafka-client-truststore.jks
         ssl-truststore-password: none
+        filter-logger-name-pattern: org.jboss.pnc.*
+        level: INFO
+
   oidc:
     auth-server-url: https://keycloak-host/auth/realms/my-realm
     client-id: my-client-id
