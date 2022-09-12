@@ -20,6 +20,7 @@ package org.jboss.pnc.builddriver.runtime;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.pnc.common.concurrent.Sequence;
 
@@ -30,6 +31,7 @@ import javax.enterprise.event.Observes;
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
  */
 @ApplicationScoped
+@Slf4j
 public class ApplicationLifecycle {
 
     @ConfigProperty(name = "sequenceGenerator.nodeId", defaultValue = "-1") // nodeId + nodeIdOffset must be < 1024
@@ -42,8 +44,13 @@ public class ApplicationLifecycle {
         if (nodeId > -1) {
             Sequence.setNodeId(nodeIdOffset + nodeId);
         }
+
+        // we need to log startup and shutdown events
+        log.info("Application has started");
     }
 
     void onStop(@Observes ShutdownEvent event) {
+        // we need to log startup and shutdown events
+        log.info("The application is stopping");
     }
 }
