@@ -164,10 +164,10 @@ public class Driver {
                 buildRequest.getScmUrl(),
                 buildRequest.getScmRevision(),
                 buildRequest.getCommand());
-        logger.debug("Build script: {}", buildScript);
+        logger.info("Build script: {}", buildScript);
         Path runScriptPath = Paths.get(workingDirectory, "/run.sh");
 
-        logger.debug("Scheduling script upload ...");
+        logger.info("Scheduling script upload ...");
         return buildAgentClient.uploadFile(ByteBuffer.wrap(buildScript.getBytes(StandardCharsets.UTF_8)), runScriptPath)
                 .thenAcceptAsync(response -> {
                     logger.info("Script upload completed with status: {}", response.getCode());
@@ -239,7 +239,7 @@ public class Driver {
 
         final boolean debugEnabled;
         CompletableFuture<String> optionallyEnableSsh;
-        logger.debug("Script completionNotifier completed with status {}.", status);
+        logger.info("Script completionNotifier completed with status {}.", status);
         if ((status == Status.FAILED || status == Status.SYSTEM_ERROR || status == Status.INTERRUPTED)
                 && callbackContext.isEnableDebugOnFailure()) {
             debugEnabled = true;
