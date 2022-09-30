@@ -19,6 +19,9 @@ package org.jboss.pnc.builddriver;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.opentelemetry.extension.annotations.SpanAttribute;
+import io.opentelemetry.extension.annotations.WithSpan;
 import io.undertow.util.Headers;
 import org.apache.commons.text.StringSubstitutor;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -123,7 +126,8 @@ public class Driver {
     @Inject
     HeartbeatSender heartbeatSender;
 
-    public CompletableFuture<BuildResponse> start(BuildRequest buildRequest) {
+    @WithSpan()
+    public CompletableFuture<BuildResponse> start(@SpanAttribute(value = "buildRequest") BuildRequest buildRequest) {
         List<Request.Header> headers = getHeaders();
 
         Request executionCompletedCallback;
@@ -202,7 +206,8 @@ public class Driver {
                 .singletonList(new Request.Header(HttpHeaders.AUTHORIZATION, "Bearer " + webToken.getRawToken()));
     }
 
-    public CompletableFuture<Void> completed(TaskStatusUpdateEvent event) {
+    @WithSpan()
+    public CompletableFuture<Void> completed(@SpanAttribute(value = "event") TaskStatusUpdateEvent event) {
         // context is de-serialized as HashMap
         CallbackContext callbackContext = objectMapper.convertValue(event.getContext(), CallbackContext.class);
         HeartbeatConfig heartbeatConfig = callbackContext.getHeartbeatConfig();
@@ -271,12 +276,13 @@ public class Driver {
                 .thenCompose(completedBuild -> notifyInvoker(completedBuild, invokerCallback));
     }
 
+    @WithSpan()
     private BuildCompleted prepareResult(
-            String outputChecksum,
-            String logPath,
-            Status status,
-            boolean debugEnabled,
-            HttpClient.Response response) {
+            @SpanAttribute(value = "outputChecksum") String outputChecksum,
+            @SpanAttribute(value = "logPath") String logPath,
+            @SpanAttribute(value = "status") Status status,
+            @SpanAttribute(value = "debugEnabled") boolean debugEnabled,
+            @SpanAttribute(value = "response") HttpClient.Response response) {
         StringBuilder logBuilder = new StringBuilder();
         logBuilder.append("==== ").append(logPath).append(" ====\n");
 
@@ -339,7 +345,9 @@ public class Driver {
         }
     }
 
-    public CompletableFuture<HttpClient.Response> cancel(BuildCancelRequest buildCancelRequest) {
+    @WithSpan()
+    public CompletableFuture<HttpClient.Response> cancel(
+            @SpanAttribute(value = "buildCancelRequest") BuildCancelRequest buildCancelRequest) {
         HttpClientConfiguration clientConfiguration = HttpClientConfiguration.newBuilder()
                 .termBaseUrl(buildCancelRequest.getBuildEnvironmentBaseUrl())
                 .requestHeaders(getRequestHeaders())
@@ -412,6 +420,9 @@ public class Driver {
         headersFromMdc(headers, MDCHeaderKeys.PROCESS_CONTEXT);
         headersFromMdc(headers, MDCHeaderKeys.TMP);
         headersFromMdc(headers, MDCHeaderKeys.EXP);
+        headersFromMdc(headers, MDCHeaderKeys.TRACE_ID);
+        headersFromMdc(headers, MDCHeaderKeys.SPAN_ID);
+        headersFromMdc(headers, MDCHeaderKeys.PARENT_ID);
         return headers;
     }
 
