@@ -1,4 +1,18 @@
 quarkus:
+  application:
+    name: build-driver
+  opentelemetry:
+    enabled: true
+    tracer:
+      enabled: true
+      # reflect sampling on collector
+      resource-attributes: "sampler_ratio=0.05,service.name=build-driver"
+      sampler:
+        ratio: 0.05
+      exporter:
+        otlp:
+          # Send telemetry data to an opentelemetry-collector
+          #endpoint: http://localhost:4317
   shutdown:
     timeout: 30
   log:
@@ -6,7 +20,7 @@ quarkus:
       "org.jboss.pnc":
         level: DEBUG
     console:
-      format: "%d{HH:mm:ss,SSS} %-5p [%c{3.}] (%t) %s%e mdc:[%X]%n"
+      format: "%d{HH:mm:ss,SSS} %-5p traceId=%X{traceId}, parentId=%X{parentId}, spanId=%X{spanId}, sampled=%X{sampled} [%c{3.}] (%t) %s%e mdc:[%X]%n"
     handler:
       kafka:
         enabled: false
