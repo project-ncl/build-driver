@@ -61,6 +61,9 @@ public class LoggingFilter implements ContainerRequestFilter, ContainerResponseF
         headerToMap(mdcContext, MDCHeaderKeys.TMP, requestContext);
         headerToMap(mdcContext, MDCHeaderKeys.EXP, requestContext);
         headerToMap(mdcContext, MDCHeaderKeys.USER_ID, requestContext);
+        headerToMap(mdcContext, MDCHeaderKeys.TRACE_ID, requestContext);
+        headerToMap(mdcContext, MDCHeaderKeys.SPAN_ID, requestContext);
+        headerToMap(mdcContext, MDCHeaderKeys.PARENT_ID, requestContext);
 
         MDC.setContextMap(mdcContext);
 
