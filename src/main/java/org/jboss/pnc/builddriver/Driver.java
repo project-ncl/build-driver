@@ -20,8 +20,9 @@ package org.jboss.pnc.builddriver;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.opentelemetry.extension.annotations.SpanAttribute;
-import io.opentelemetry.extension.annotations.WithSpan;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.undertow.util.Headers;
 import org.apache.commons.text.StringSubstitutor;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -173,19 +174,19 @@ public class Driver {
 
         logger.info("Scheduling script upload ...");
         return buildAgentClient.uploadFile(ByteBuffer.wrap(buildScript.getBytes(StandardCharsets.UTF_8)), runScriptPath)
-                .thenAcceptAsync(response -> {
+                .thenAcceptAsync(Context.current().wrapConsumer(response -> {
                     logger.info("Script upload completed with status: {}", response.getCode());
                     if (!isSuccess(response.getCode())) {
                         throw new RuntimeException(
                                 "Filed to upload build script. Response code: " + response.getCode());
                     }
-                }, executor)
-                .thenComposeAsync((aVoid) -> {
+                }), executor)
+                .thenComposeAsync(Context.current().wrapFunction((aVoid) -> {
                     String command = "sh " + runScriptPath;
                     logger.info("Invoking remote command {}.", command);
                     return buildAgentClient.executeAsync(command);
-                }, executor)
-                .thenApplyAsync(sessionId -> {
+                }), executor)
+                .thenApplyAsync(Context.current().wrapFunction(sessionId -> {
                     logger.info("Remote command invoked.");
                     URI buildCancelUrl;
                     try {
@@ -198,7 +199,7 @@ public class Driver {
                             buildRequest.getEnvironmentBaseUrl());
                     Request cancel = new Request(Request.Method.PUT, buildCancelUrl, headers, cancelRequest);
                     return new BuildResponse(cancel, sessionId);
-                }, executor);
+                }), executor);
     }
 
     private List<Request.Header> getRequestHeaders() {
@@ -218,13 +219,14 @@ public class Driver {
         } else {
             heartBeatSchedule = Optional.empty();
         }
-        return doCompleted(event.getNewStatus(), event.getOutputChecksum(), callbackContext).handleAsync((nul, e) -> {
-            heartBeatSchedule.ifPresent(hb -> hb.cancel(false));
-            if (e != null) {
-                throw new CompletionException("Failed to process completion.", e);
-            }
-            return null;
-        }, executor);
+        return doCompleted(event.getNewStatus(), event.getOutputChecksum(), callbackContext)
+                .handleAsync(Context.current().wrapFunction((nul, e) -> {
+                    heartBeatSchedule.ifPresent(hb -> hb.cancel(false));
+                    if (e != null) {
+                        throw new CompletionException("Failed to process completion.", e);
+                    }
+                    return null;
+                }), executor);
     }
 
     private CompletableFuture<Void> doCompleted(Status status, String outputChecksum, CallbackContext callbackContext) {
@@ -259,9 +261,16 @@ public class Driver {
             return buildAgentClient.downloadFile(Paths.get(logPath), maxLogSize);
         })
                 .thenApplyAsync(
-                        response -> prepareResult(outputChecksum, logPath, status, debugEnabled, response),
+                        Context.current()
+                                .wrapFunction(
+                                        response -> prepareResult(
+                                                outputChecksum,
+                                                logPath,
+                                                status,
+                                                debugEnabled,
+                                                response)),
                         executor)
-                .handleAsync((completedBuild, throwable) -> {
+                .handleAsync(Context.current().wrapFunction((completedBuild, throwable) -> {
                     if (throwable != null) {
                         logger.error("Completing with SYSTEM_ERROR.", throwable);
                         return BuildCompleted.builder()
@@ -272,7 +281,7 @@ public class Driver {
                     } else {
                         return completedBuild;
                     }
-                }, executor)
+                }), executor)
                 .thenCompose(completedBuild -> notifyInvoker(completedBuild, invokerCallback));
     }
 
