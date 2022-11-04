@@ -213,6 +213,7 @@
         <extensions>true</extensions>
         <configuration>
             <finalName>build-driver</finalName>
+            <skipOriginalJarRename>true</skipOriginalJarRename>
         </configuration>
         <executions>
           <execution>
