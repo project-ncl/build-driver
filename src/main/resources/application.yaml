@@ -47,9 +47,8 @@ build-driver:
     echo 'cd %{workingDirectory}/%{projectName}' >> $${HOME}/.bashrc
     set -xe
     cd %{workingDirectory}
-    git clone %{scmUrl} %{projectName}
+    git clone --branch %{scmRevision} --depth 1 %{scmUrl} %{projectName}
     cd %{projectName}
-    git reset --hard %{scmRevision}
     %{command}
 
 "%test":
