@@ -50,7 +50,7 @@ build-driver:
     git clone --branch %{scmTag} --depth 1 %{scmUrl} %{projectName}
     cd %{projectName}
     git_commit_id="$(git rev-parse HEAD)"
-    if [[ "%{scmRevision}" != "${git_commit_id}" ]]; then
+    if [[ "%{scmRevision}" != "\${git_commit_id}" ]]; then
       echo "[ERROR] SCM Revision of request doesn't match the commit id from the scm tag"
       echo "[ERROR] Aborting!"
       exit 1
