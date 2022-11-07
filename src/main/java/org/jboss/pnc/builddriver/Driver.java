@@ -168,6 +168,7 @@ public class Driver {
                 buildRequest.getProjectName(),
                 buildRequest.getScmUrl(),
                 buildRequest.getScmRevision(),
+                buildRequest.getScmTag(),
                 buildRequest.getCommand());
         logger.info("Build script: {}", buildScript);
         Path runScriptPath = Paths.get(workingDirectory, "/run.sh");
@@ -409,12 +410,14 @@ public class Driver {
             String projectName,
             String scmUrl,
             String scmRevision,
+            String scmTag,
             String buildCommand) {
         Map<String, String> values = new HashMap<>();
         values.put("workingDirectory", workingDirectory);
         values.put("projectName", projectName);
         values.put("scmUrl", scmUrl);
         values.put("scmRevision", scmRevision);
+        values.put("scmTag", scmTag);
         values.put("command", buildCommand);
         return StringSubstitutor.replace(scriptTemplate, values, "%{", "}");
     }
