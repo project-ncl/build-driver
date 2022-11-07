@@ -115,6 +115,7 @@ public class BuildDriverTest {
                 "the-build",
                 "not-used",
                 "not-used",
+                "not-used",
                 "exit 0",
                 workingDirectory.toString(),
                 baseBuildAgentUri.toString(),
@@ -155,6 +156,7 @@ public class BuildDriverTest {
 
         BuildRequest buildRequest = new BuildRequest(
                 "the-build",
+                "not-used",
                 "not-used",
                 "not-used",
                 "for i in {1..3}; do echo \"Sleeping $i times\"; sleep 1; done",
@@ -237,6 +239,7 @@ public class BuildDriverTest {
         String command = "set +ex\n" + "cat /tmp/log-100MB.log;" + "sleep 5;";
         BuildRequest buildRequest = new BuildRequest(
                 "the-build",
+                "not-used",
                 "not-used",
                 "not-used",
                 command,
