@@ -62,8 +62,6 @@ public class LoggingFilter implements ContainerRequestFilter, ContainerResponseF
                 MDCHeaderKeys.TRACE_STATE,
                 Span.current().getSpanContext());
 
-        requestContext.setProperty(REQUEST_EXECUTION_START, System.currentTimeMillis());
-
         UriInfo uriInfo = requestContext.getUriInfo();
         Request request = requestContext.getRequest();
         logger.info("Requested {} {}.", request.getMethod(), uriInfo.getRequestUri());
