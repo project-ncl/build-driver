@@ -21,7 +21,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jboss.pnc</groupId>
   <artifactId>build-driver</artifactId>
-  <version>1.0.7-SNAPSHOT</version>
+  <version>1.0.9-SNAPSHOT</version>
 
   <name>build-driver</name>
   <description>Stateless build driver</description>
@@ -58,7 +58,7 @@
   <properties>
     <surefire-plugin.version>2.22.2</surefire-plugin.version>
     <maven.compiler.target>11</maven.compiler.target>
-    <quarkus.platform.version>2.13.2.Final</quarkus.platform.version>
+    <quarkus.platform.version>2.14.0.Final</quarkus.platform.version>
     <maven.compiler.source>11</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
@@ -213,6 +213,7 @@
         <extensions>true</extensions>
         <configuration>
             <finalName>build-driver</finalName>
+            <skipOriginalJarRename>true</skipOriginalJarRename>
         </configuration>
         <executions>
           <execution>
@@ -264,7 +265,7 @@
       <plugin>
         <groupId>net.revelc.code.formatter</groupId>
         <artifactId>formatter-maven-plugin</artifactId>
-        <version>2.20.0</version>
+        <version>2.21.0</version>
         <configuration>
           <configFile>eclipse-codeStyle.xml</configFile>
         </configuration>
