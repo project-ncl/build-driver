@@ -20,6 +20,8 @@ package org.jboss.pnc.builddriver;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
@@ -47,6 +49,7 @@ import org.jboss.pnc.buildagent.common.http.HttpClient;
 import org.jboss.pnc.buildagent.common.http.StringResult;
 import org.jboss.pnc.builddriver.dto.CallbackContext;
 import org.jboss.pnc.common.Strings;
+import org.jboss.pnc.common.otel.OtelUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -432,9 +435,9 @@ public class Driver {
         headersFromMdc(headers, MDCHeaderKeys.PROCESS_CONTEXT);
         headersFromMdc(headers, MDCHeaderKeys.TMP);
         headersFromMdc(headers, MDCHeaderKeys.EXP);
-        headersFromMdc(headers, MDCHeaderKeys.TRACE_ID);
-        headersFromMdc(headers, MDCHeaderKeys.SPAN_ID);
-        headersFromMdc(headers, MDCHeaderKeys.PARENT_ID);
+
+        addMdcOtelHeader(headers);
+
         return headers;
     }
 
@@ -443,5 +446,24 @@ public class Driver {
         if (!Strings.isEmpty(mdcValue)) {
             headers.add(new Request.Header(headerKey.getHeaderName(), mdcValue));
         }
+    }
+
+    private void addMdcOtelHeader(List<Request.Header> headers) {
+
+        SpanContext spanContext = Span.current().getSpanContext();
+        headers.add(new Request.Header(MDCHeaderKeys.TRACE_ID.getHeaderName(), spanContext.getTraceId()));
+        logger.debug("Added header ('{}','{}') ", MDCHeaderKeys.TRACE_ID.getHeaderName(), spanContext.getTraceId());
+        headers.add(new Request.Header(MDCHeaderKeys.SPAN_ID.getHeaderName(), spanContext.getSpanId()));
+        logger.debug("Added header ('{}','{}') ", MDCHeaderKeys.SPAN_ID.getHeaderName(), spanContext.getSpanId());
+
+        Map<String, String> otelHeaders = new HashMap<>();
+        otelHeaders.putAll(OtelUtils.createTraceParentHeader(spanContext));
+        otelHeaders.putAll(OtelUtils.createTraceStateHeader(spanContext));
+        otelHeaders.forEach((key, value) -> {
+            if (!Strings.isEmpty(value)) {
+                headers.add(new Request.Header(key, value));
+                logger.debug("Added header ('{}','{}') ", key, value);
+            }
+        });
     }
 }
