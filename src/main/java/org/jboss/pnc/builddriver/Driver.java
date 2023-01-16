@@ -176,13 +176,30 @@ public class Driver {
         logger.info("Build script: {}", buildScript);
         Path runScriptPath = Paths.get(workingDirectory, "/run.sh");
 
-        logger.info("Scheduling script upload ...");
-        return buildAgentClient.uploadFile(ByteBuffer.wrap(buildScript.getBytes(StandardCharsets.UTF_8)), runScriptPath)
+        Path traceparentPath = Paths.get(workingDirectory, "/traceparent");
+        String traceParent = OtelUtils.createTraceParent(Span.current().getSpanContext());
+
+        logger.info("Traceparent {} being uploaded to file {} ...", traceParent, traceparentPath);
+        return buildAgentClient
+                .uploadFile(ByteBuffer.wrap(traceParent.getBytes(StandardCharsets.UTF_8)), traceparentPath)
+                .thenAcceptAsync(Context.current().wrapConsumer(response -> {
+                    logger.info("Traceparent upload completed with status: {}", response.getCode());
+                    if (!isSuccess(response.getCode())) {
+                        logger.warn(
+                                "Failed to upload traceparent file content, received status: {}",
+                                response.getCode());
+                    }
+                }), executor)
+                .thenComposeAsync(Context.current().wrapFunction((aVoid) -> {
+                    logger.info("Scheduling script upload ...");
+                    return buildAgentClient
+                            .uploadFile(ByteBuffer.wrap(buildScript.getBytes(StandardCharsets.UTF_8)), runScriptPath);
+                }), executor)
                 .thenAcceptAsync(Context.current().wrapConsumer(response -> {
                     logger.info("Script upload completed with status: {}", response.getCode());
                     if (!isSuccess(response.getCode())) {
                         throw new RuntimeException(
-                                "Filed to upload build script. Response code: " + response.getCode());
+                                "Failed to upload build script. Response code: " + response.getCode());
                     }
                 }), executor)
                 .thenComposeAsync(Context.current().wrapFunction((aVoid) -> {
