@@ -182,14 +182,16 @@ public class Driver {
         logger.info("Traceparent {} being uploaded to file {} ...", traceParent, traceparentPath);
         return buildAgentClient
                 .uploadFile(ByteBuffer.wrap(traceParent.getBytes(StandardCharsets.UTF_8)), traceparentPath)
-                .thenAcceptAsync(Context.current().wrapConsumer(response -> {
+                .handleAsync((response, throwable) -> {
                     logger.info("Traceparent upload completed with status: {}", response.getCode());
-                    if (!isSuccess(response.getCode())) {
-                        logger.warn(
-                                "Failed to upload traceparent file content, received status: {}",
-                                response.getCode());
+                    if (throwable != null || !isSuccess(response.getCode())) {
+                        logger.error(
+                                "Failed to upload traceparent file content, received status: {}, exception:",
+                                response.getCode(),
+                                throwable);
                     }
-                }), executor)
+                    return null;
+                }, executor)
                 .thenComposeAsync(Context.current().wrapFunction((aVoid) -> {
                     logger.info("Scheduling script upload ...");
                     return buildAgentClient
