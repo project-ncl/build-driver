@@ -176,7 +176,7 @@ public class Driver {
         logger.info("Build script: {}", buildScript);
         Path runScriptPath = Paths.get(workingDirectory, "/run.sh");
 
-        Path traceparentPath = Paths.get(workingDirectory, "/traceparent");
+        Path traceparentPath = Paths.get(workingDirectory, "/otel/traceparent");
         String traceParent = OtelUtils.createTraceParent(Span.current().getSpanContext());
 
         logger.info("Traceparent {} being uploaded to file {} ...", traceParent, traceparentPath);
