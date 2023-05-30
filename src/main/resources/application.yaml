@@ -1,10 +1,11 @@
 quarkus:
   application:
     name: build-driver
+  # [NCL-7901] Disable Opentelemetry for v2.5
   opentelemetry:
-    enabled: true
+    enabled: false
     tracer:
-      enabled: true
+      enabled: false
       # reflect sampling on collector
       resource-attributes: "sampler_ratio=0.05,service.name=build-driver"
       sampler:
