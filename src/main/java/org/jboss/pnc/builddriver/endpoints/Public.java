@@ -19,21 +19,21 @@
 package org.jboss.pnc.builddriver.endpoints;
 
 import io.quarkus.security.Authenticated;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.pnc.api.builddriver.dto.BuildCancelRequest;
 import org.jboss.pnc.api.builddriver.dto.BuildRequest;
 import org.jboss.pnc.api.builddriver.dto.BuildResponse;
+import org.jboss.pnc.api.dto.ComponentVersion;
+import org.jboss.pnc.builddriver.BuildInformationConstants;
 import org.jboss.pnc.builddriver.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.time.ZonedDateTime;
 import java.util.concurrent.CompletionStage;
 
 /**
@@ -50,6 +50,9 @@ public class Public {
 
     @Inject
     Driver driver;
+
+    @ConfigProperty(name = "quarkus.application.name")
+    String name;
 
     /**
      * Triggers the build execution for a given configuration. Method returns when the build is running in a remote
@@ -72,5 +75,16 @@ public class Public {
     public CompletionStage<Response> cancel(BuildCancelRequest buildCancelRequest) {
         logger.info("Requested cancel: {}", buildCancelRequest.getBuildExecutionId());
         return driver.cancel(buildCancelRequest).thenApply((r) -> Response.status(r.getCode()).build());
+    }
+
+    @Path("/version")
+    @GET
+    public ComponentVersion getVersion() {
+        return ComponentVersion.builder()
+                .name(name)
+                .version(BuildInformationConstants.VERSION)
+                .commit(BuildInformationConstants.COMMIT_HASH)
+                .builtOn(ZonedDateTime.parse(BuildInformationConstants.BUILD_TIME))
+                .build();
     }
 }
