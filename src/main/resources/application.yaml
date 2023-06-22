@@ -47,7 +47,7 @@ build-driver:
     echo 'cd %{workingDirectory}/%{projectName}' >> $${HOME}/.bashrc
     set -xe
     cd %{workingDirectory}
-    git clone --branch %{scmTag} --depth 1 %{scmUrl} %{projectName}
+    git clone --progress --branch %{scmTag} --depth 1 %{scmUrl} %{projectName}
     cd %{projectName}
     git_commit_id="$(git rev-parse HEAD)"
     if [[ "%{scmRevision}" != "\${git_commit_id}" ]]; then
