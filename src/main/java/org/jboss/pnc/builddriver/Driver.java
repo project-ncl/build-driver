@@ -46,7 +46,6 @@ import org.jboss.pnc.buildagent.client.BuildAgentHttpClient;
 import org.jboss.pnc.buildagent.client.HttpClientConfiguration;
 import org.jboss.pnc.buildagent.common.http.HeartbeatSender;
 import org.jboss.pnc.buildagent.common.http.HttpClient;
-import org.jboss.pnc.buildagent.common.http.StringResult;
 import org.jboss.pnc.builddriver.dto.CallbackContext;
 import org.jboss.pnc.common.Strings;
 import org.jboss.pnc.common.otel.OtelUtils;
@@ -73,7 +72,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Future;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -120,9 +118,6 @@ public class Driver {
 
     @ConfigProperty(name = "build-driver.invoker-callback.wait-before-retry", defaultValue = "500")
     long invokerWaitBeforeRetry;
-
-    @ConfigProperty(name = "build-driver.max-log-size", defaultValue = "94371840") // = 90 * 1024 * 1024 = 90MB
-    int maxLogSize;
 
     @Inject
     HttpClient httpClient;
@@ -253,7 +248,6 @@ public class Driver {
     }
 
     private CompletableFuture<Void> doCompleted(Status status, String outputChecksum, CallbackContext callbackContext) {
-        String logPath = callbackContext.getWorkingDirectory() + "/console.log";
         Request invokerCallback = callbackContext.getInvokerCallback();
 
         HttpClientConfiguration clientConfiguration = HttpClientConfiguration.newBuilder()
@@ -279,102 +273,18 @@ public class Driver {
             optionallyEnableSsh = CompletableFuture.completedFuture(null);
         }
 
-        return optionallyEnableSsh.thenCompose(s -> {
-            logger.debug("Downloading file to String Buffer from {}", logPath);
-            return buildAgentClient.downloadFile(Paths.get(logPath), maxLogSize);
-        })
-                .thenApplyAsync(
-                        Context.current()
-                                .wrapFunction(
-                                        response -> prepareResult(
-                                                outputChecksum,
-                                                logPath,
-                                                status,
-                                                debugEnabled,
-                                                response)),
-                        executor)
-                .handleAsync(Context.current().wrapFunction((completedBuild, throwable) -> {
-                    if (throwable != null) {
-                        logger.error("Completing with SYSTEM_ERROR.", throwable);
-                        return BuildCompleted.builder()
-                                .buildLog(throwable.getMessage())
-                                .throwable(throwable)
-                                .buildStatus(ResultStatus.SYSTEM_ERROR)
-                                .build();
-                    } else {
-                        return completedBuild;
-                    }
-                }), executor)
-                .thenCompose(completedBuild -> notifyInvoker(completedBuild, invokerCallback));
-    }
-
-    @WithSpan()
-    private BuildCompleted prepareResult(
-            @SpanAttribute(value = "outputChecksum") String outputChecksum,
-            @SpanAttribute(value = "logPath") String logPath,
-            @SpanAttribute(value = "status") Status status,
-            @SpanAttribute(value = "debugEnabled") boolean debugEnabled,
-            @SpanAttribute(value = "response") HttpClient.Response response) {
-        StringBuilder logBuilder = new StringBuilder();
-        logBuilder.append("==== ").append(logPath).append(" ====\n");
-
-        StringResult stringResult = response.getStringResult();
-        logBuilder.append(stringResult.getString());
-
-        if (!stringResult.isComplete()) {
-            logger.warn("\nLog file was not fully downloaded from: {}", logPath);
-            logBuilder.append("----- build log was cut -----\n");
-            if (Status.COMPLETED.equals(status)) { // status is success
-                logBuilder.append(
-                        String.format(
-                                "----- build completed successfully but it is marked as failed due to log overflow. Max log size is %d -----\n",
-                                maxLogSize));
-                return new BuildCompleted(
-                        logBuilder.toString(),
-                        ResultStatus.FAILED,
-                        outputChecksum,
-                        debugEnabled,
-                        null);
+        return optionallyEnableSsh.handle(Context.current().wrapFunction((completedBuild, throwable) -> {
+            if (throwable != null) {
+                logger.error("Completing with SYSTEM_ERROR.", throwable);
+                return BuildCompleted.builder().throwable(throwable).buildStatus(ResultStatus.SYSTEM_ERROR).build();
+            } else {
+                return BuildCompleted.builder()
+                        .outputChecksum(outputChecksum)
+                        .debugEnabled(debugEnabled)
+                        .buildStatus(TypeConverters.toResultStatus(status))
+                        .build();
             }
-        }
-
-        return new BuildCompleted(
-                logBuilder.toString(),
-                TypeConverters.toResultStatus(overrideStatusFromLogs(logBuilder, status)),
-                outputChecksum,
-                debugEnabled,
-                null);
-    }
-
-    /**
-     * Override the final status state based on the builder logs. If a specific pattern is matched from the logs, the
-     * final status may be overridden
-     *
-     * This method is written in a generic fashion to allow any override of status. However, right now it only handles
-     * the case where the logs have "Indy Connection refused" message.
-     *
-     * @param logBuilder logs
-     * @param currentStatus
-     * @return Updated status
-     */
-    static Status overrideStatusFromLogs(StringBuilder logBuilder, Status currentStatus) {
-
-        // NCL-6736: We only want to override the status if we are in status FAILED for Indy connection refused
-        if (currentStatus != Status.FAILED) {
-            return currentStatus;
-        }
-
-        // NCL-6736: Check if we have and indy connection refused in our logs
-        Pattern p = Pattern.compile("Connect to indy.* failed: Connection refused");
-        Matcher m = p.matcher(logBuilder);
-
-        if (m.find()) {
-            Status newStatus = Status.SYSTEM_ERROR;
-            logger.info("Overriding status from {} to {} due to Indy connection refused", currentStatus, newStatus);
-            return newStatus;
-        } else {
-            return currentStatus;
-        }
+        })).thenCompose(completedBuild -> notifyInvoker(completedBuild, invokerCallback));
     }
 
     @WithSpan()
