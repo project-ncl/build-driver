@@ -40,7 +40,6 @@ quarkus:
     keycloak:
       policy-enforcer:
         enable: false
-
 build-driver:
   self-base-url: http://this-service-host-for-a-callback/
   script-template: |
