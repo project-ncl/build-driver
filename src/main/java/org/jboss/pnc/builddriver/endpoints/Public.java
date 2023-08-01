@@ -18,7 +18,6 @@
 
 package org.jboss.pnc.builddriver.endpoints;
 
-import io.quarkus.security.Authenticated;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.pnc.api.builddriver.dto.BuildCancelRequest;
 import org.jboss.pnc.api.builddriver.dto.BuildRequest;
@@ -29,6 +28,7 @@ import org.jboss.pnc.builddriver.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -58,7 +58,7 @@ public class Public {
      * Triggers the build execution for a given configuration. Method returns when the build is running in a remote
      * build environment.
      */
-    @Authenticated
+    @RolesAllowed({ "pnc-users-build-driver-admin", "pnc-users-admin" })
     @POST
     @Path("/build")
     public CompletionStage<BuildResponse> build(BuildRequest buildRequest) {
@@ -69,7 +69,7 @@ public class Public {
     /**
      * Cancel the build execution.
      */
-    @Authenticated
+    @RolesAllowed({ "pnc-users-build-driver-admin", "pnc-users-admin" })
     @PUT
     @Path("/cancel")
     public CompletionStage<Response> cancel(BuildCancelRequest buildCancelRequest) {
