@@ -25,6 +25,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
+import io.quarkus.oidc.client.Tokens;
 import io.undertow.util.Headers;
 import org.apache.commons.text.StringSubstitutor;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -72,7 +73,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Future;
-import java.util.regex.Pattern;
 
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
@@ -90,6 +90,9 @@ public class Driver {
 
     @Inject
     JsonWebToken webToken;
+
+    @Inject
+    Tokens serviceTokens;
 
     @ConfigProperty(name = "build-driver.self-base-url")
     String selfBaseUrl;
@@ -127,7 +130,7 @@ public class Driver {
 
     @WithSpan()
     public CompletableFuture<BuildResponse> start(@SpanAttribute(value = "buildRequest") BuildRequest buildRequest) {
-        List<Request.Header> headers = getHeaders();
+        List<Request.Header> headers = getCompletedCallbackHeaders();
 
         Request executionCompletedCallback;
         try {
@@ -221,8 +224,7 @@ public class Driver {
     }
 
     private List<Request.Header> getRequestHeaders() {
-        return Collections
-                .singletonList(new Request.Header(HttpHeaders.AUTHORIZATION, "Bearer " + webToken.getRawToken()));
+        return addAuthenticationToHeader(Collections.emptyList());
     }
 
     @WithSpan()
@@ -303,6 +305,14 @@ public class Driver {
         return buildAgentClient.cancel(buildCancelRequest.getBuildExecutionId());
     }
 
+    /**
+     * The build-agent completed, sending back the callback data we need to send back to BPM. We need to now invoke that
+     * callback data to notify BPM it's done
+     *
+     * @param buildCompleted build completed object
+     * @param callback callback data to send back
+     * @return completable future
+     */
     private CompletableFuture<Void> notifyInvoker(BuildCompleted buildCompleted, Request callback) {
         byte[] data;
         try {
@@ -311,16 +321,14 @@ public class Driver {
             logger.error("Cannot serialize result.", e);
             return CompletableFuture.failedFuture(new DriverException("Cannot serialize result.", e));
         }
-        return httpClient
-                .invoke(
-                        new Request(callback.getMethod(), callback.getUri(), callback.getHeaders()),
-                        ByteBuffer.wrap(data),
-                        invokerMaxRetries,
-                        invokerWaitBeforeRetry,
-                        -1L,
-                        socketReadTimeout,
-                        socketWriteTimeout)
-                .thenApply(response -> {
+        return httpClient.invoke(
+                new Request(callback.getMethod(), callback.getUri(), addAuthenticationToHeader(callback.getHeaders())),
+                ByteBuffer.wrap(data),
+                invokerMaxRetries,
+                invokerWaitBeforeRetry,
+                -1L,
+                socketReadTimeout,
+                socketWriteTimeout).thenApply(response -> {
                     if (isSuccess(response.getCode())) {
                         logger.info("Successfully sent buildCompleted to the invoker.");
                     } else {
@@ -354,12 +362,20 @@ public class Driver {
         return StringSubstitutor.replace(scriptTemplate, values, "%{", "}");
     }
 
-    private List<Request.Header> getHeaders() {
+    /**
+     * Used to set the callback for the completion request from build-agent to build-driver
+     *
+     * @return list of headers
+     */
+    private List<Request.Header> getCompletedCallbackHeaders() {
         List<Request.Header> headers = new ArrayList<>();
         headers.add(new Request.Header(Headers.CONTENT_TYPE_STRING, MediaType.APPLICATION_JSON));
+
+        // TODO: remove this because build-agent needs to set its own Authorization header
         if (webToken.getRawToken() != null) {
             headers.add(new Request.Header(Headers.AUTHORIZATION_STRING, "Bearer " + webToken.getRawToken()));
         }
+
         headersFromMdc(headers, MDCHeaderKeys.REQUEST_CONTEXT);
         headersFromMdc(headers, MDCHeaderKeys.PROCESS_CONTEXT);
         headersFromMdc(headers, MDCHeaderKeys.TMP);
@@ -394,5 +410,18 @@ public class Driver {
                 logger.debug("Added header ('{}','{}') ", key, value);
             }
         });
+    }
+
+    /**
+     * Add the Authentication header to a list of headers
+     *
+     * @param headers
+     * @return
+     */
+    private List<Request.Header> addAuthenticationToHeader(List<Request.Header> headers) {
+
+        List<Request.Header> toReturn = new ArrayList<>(headers);
+        toReturn.add(new Request.Header(HttpHeaders.AUTHORIZATION, "Bearer " + serviceTokens.getAccessToken()));
+        return toReturn;
     }
 }

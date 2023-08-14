@@ -36,6 +36,12 @@ quarkus:
     keycloak:
       policy-enforcer:
         enable: false
+  oidc-client:
+    auth-server-url: https://keycloak-host/auth/realms/my-realm
+    client-id: my-client-id
+    credentials:
+      secret: hey
+
 build-driver:
   self-base-url: http://this-service-host-for-a-callback/
   script-template: |
@@ -61,6 +67,8 @@ build-driver:
       %{command}
   quarkus:
     oidc:
+      enabled: false
+    oidc-client:
       enabled: false
     log:
       console:
