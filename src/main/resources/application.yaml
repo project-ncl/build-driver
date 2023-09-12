@@ -1,6 +1,6 @@
 quarkus:
   application:
-    name: build-driver
+    name: pnc-build-driver
   opentelemetry:
     enabled: true
     tracer:
