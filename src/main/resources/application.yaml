@@ -1,7 +1,6 @@
 quarkus:
   application:
-    name: build-driver
-  # [NCL-7901] Disable Opentelemetry for v2.5
+    name: pnc-build-driver
   opentelemetry:
     enabled: false
     tracer:
