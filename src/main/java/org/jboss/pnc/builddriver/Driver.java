@@ -25,12 +25,11 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
-import io.quarkus.oidc.client.Tokens;
+import io.quarkus.oidc.client.OidcClient;
 import io.undertow.util.Headers;
 import org.apache.commons.text.StringSubstitutor;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.pnc.api.builddriver.dto.BuildCancelRequest;
 import org.jboss.pnc.api.builddriver.dto.BuildCompleted;
 import org.jboss.pnc.api.builddriver.dto.BuildRequest;
@@ -92,10 +91,7 @@ public class Driver {
     ObjectMapper objectMapper;
 
     @Inject
-    JsonWebToken webToken;
-
-    @Inject
-    Tokens serviceTokens;
+    OidcClient oidcClient;
 
     @ConfigProperty(name = "build-driver.self-base-url")
     String selfBaseUrl;
@@ -507,7 +503,16 @@ public class Driver {
     private List<Request.Header> addAuthenticationToHeader(List<Request.Header> headers) {
 
         List<Request.Header> toReturn = new ArrayList<>(headers);
-        toReturn.add(new Request.Header(HttpHeaders.AUTHORIZATION, "Bearer " + serviceTokens.getAccessToken()));
+        toReturn.add(new Request.Header(HttpHeaders.AUTHORIZATION, "Bearer " + getFreshAccessToken()));
         return toReturn;
+    }
+
+    /**
+     * Get an access token for the service account
+     *
+     * @return fresh access token
+     */
+    private String getFreshAccessToken() {
+        return oidcClient.getTokens().await().indefinitely().getAccessToken();
     }
 }
