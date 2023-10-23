@@ -21,7 +21,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jboss.pnc</groupId>
   <artifactId>build-driver</artifactId>
-  <version>1.1.1</version>
+  <version>1.1.2-SNAPSHOT</version>
 
   <name>build-driver</name>
   <description>Stateless build driver</description>
@@ -45,7 +45,7 @@
     <connection>scm:git:https://github.com/project-ncl/build-driver.git</connection>
     <developerConnection>scm:git:git@github.com:project-ncl/build-driver.git</developerConnection>
     <url>https://github.com/project-ncl/build-driver/</url>
-    <tag>1.1.1</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <developers>
