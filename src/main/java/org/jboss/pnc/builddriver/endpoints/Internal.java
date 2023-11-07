@@ -18,12 +18,12 @@
 
 package org.jboss.pnc.builddriver.endpoints;
 
+import io.quarkus.security.Authenticated;
 import org.jboss.pnc.buildagent.api.TaskStatusUpdateEvent;
 import org.jboss.pnc.builddriver.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.PUT;
@@ -54,7 +54,7 @@ public class Internal {
      * @param updateEvent
      * @return
      */
-    @RolesAllowed({ "pnc-users-build-driver-admin", "pnc-users-admin" })
+    @Authenticated
     @PUT
     @Path("/completed")
     public CompletionStage<Void> buildExecutionCompleted(TaskStatusUpdateEvent updateEvent) {
