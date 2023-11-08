@@ -459,9 +459,7 @@ public class Driver {
         headers.add(new Request.Header(Headers.CONTENT_TYPE_STRING, MediaType.APPLICATION_JSON));
 
         // TODO: remove this because build-agent needs to set its own Authorization header
-        if (webToken.getRawToken() != null) {
-            headers.add(new Request.Header(Headers.AUTHORIZATION_STRING, "Bearer " + webToken.getRawToken()));
-        }
+        headers.add(new Request.Header(Headers.AUTHORIZATION_STRING, "Bearer " + getFreshAccessToken()));
 
         headersFromMdc(headers, MDCHeaderKeys.REQUEST_CONTEXT);
         headersFromMdc(headers, MDCHeaderKeys.PROCESS_CONTEXT);
