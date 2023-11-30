@@ -58,7 +58,7 @@ public class Public {
      * Triggers the build execution for a given configuration. Method returns when the build is running in a remote
      * build environment.
      */
-    @RolesAllowed({ "pnc-users-build-driver-admin", "pnc-users-admin" })
+    @RolesAllowed({ "pnc-app-build-driver-user", "pnc-users-admin" })
     @POST
     @Path("/build")
     public CompletionStage<BuildResponse> build(BuildRequest buildRequest) {
@@ -69,7 +69,7 @@ public class Public {
     /**
      * Cancel the build execution.
      */
-    @RolesAllowed({ "pnc-users-build-driver-admin", "pnc-users-admin" })
+    @RolesAllowed({ "pnc-app-build-driver-user", "pnc-users-admin" })
     @PUT
     @Path("/cancel")
     public CompletionStage<Response> cancel(BuildCancelRequest buildCancelRequest) {
