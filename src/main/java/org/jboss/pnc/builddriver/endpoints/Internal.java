@@ -54,7 +54,7 @@ public class Internal {
      * @param updateEvent
      * @return
      */
-    @RolesAllowed({ "pnc-users-build-driver-admin", "pnc-users-admin" })
+    @RolesAllowed({ "pnc-app-build-driver-user", "pnc-users-admin" })
     @PUT
     @Path("/completed")
     public CompletionStage<Void> buildExecutionCompleted(TaskStatusUpdateEvent updateEvent) {
