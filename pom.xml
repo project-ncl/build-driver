@@ -67,7 +67,7 @@
     <compiler-plugin.version>3.10.1</compiler-plugin.version>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
     <quarkus-logging-kafka.version>1.0.5</quarkus-logging-kafka.version>
-    <version.javadoc.plugin>3.6.2</version.javadoc.plugin>
+    <version.javadoc.plugin>3.6.3</version.javadoc.plugin>
     <version.source.plugin>3.3.0</version.source.plugin>
     <quarkus.package.type>uber-jar</quarkus.package.type>
     <tagSuffix />
