@@ -1,11 +1,13 @@
 package org.jboss.pnc.builddriver;
 
+import org.jboss.pnc.buildagent.common.http.HeartbeatHttpHeaderProvider;
 import org.jboss.pnc.buildagent.common.http.HeartbeatSender;
 import org.jboss.pnc.buildagent.common.http.HttpClient;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
 import java.io.IOException;
 
 /**
@@ -17,10 +19,13 @@ public class BeanFactory {
     private HttpClient httpClient;
     private HeartbeatSender heartbeatSender;
 
+    @Inject
+    HeartbeatHttpHeaderProvider heartbeatHttpProvider;
+
     @PostConstruct
     void init() throws IOException {
         httpClient = new HttpClient();
-        heartbeatSender = new HeartbeatSender(httpClient);
+        heartbeatSender = new HeartbeatSender(httpClient, heartbeatHttpProvider);
     }
 
     @Produces
