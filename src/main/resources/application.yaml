@@ -27,7 +27,10 @@ quarkus:
         ssl-truststore-password: none
         filter-logger-name-pattern: org.jboss.pnc.*
         level: INFO
-
+  http:
+    cors:
+      ~: true
+      origins: "/.*/"
   oidc:
     auth-server-url: https://keycloak-host/auth/realms/my-realm
     client-id: my-client-id
