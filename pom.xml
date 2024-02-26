@@ -56,7 +56,7 @@
   </developers>
 
   <properties>
-    <surefire-plugin.version>2.22.2</surefire-plugin.version>
+    <surefire-plugin.version>3.2.5</surefire-plugin.version>
     <maven.compiler.target>17</maven.compiler.target>
     <quarkus.platform.version>2.16.12.Final</quarkus.platform.version>
     <maven.compiler.source>17</maven.compiler.source>
