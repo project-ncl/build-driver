@@ -21,7 +21,7 @@ package org.jboss.pnc.builddriver;
  * The values in here are auto-generated from Maven plugin maven-replacer-plugin and the template is found in the
  * template folder
  *
- * @author Dustin Kut Moy Cheung <dcheung@redhat.com>
+ * @author Dustin Kut Moy Cheung dcheung@redhat.com
  */
 public final class BuildInformationConstants {
 
