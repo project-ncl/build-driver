@@ -44,6 +44,7 @@ import org.jboss.pnc.buildagent.client.BuildAgentClient;
 import org.jboss.pnc.buildagent.client.BuildAgentClientException;
 import org.jboss.pnc.buildagent.client.BuildAgentHttpClient;
 import org.jboss.pnc.buildagent.client.HttpClientConfiguration;
+import org.jboss.pnc.buildagent.common.BuildAgentException;
 import org.jboss.pnc.buildagent.common.http.HeartbeatSender;
 import org.jboss.pnc.buildagent.common.http.HttpClient;
 import org.jboss.pnc.builddriver.dto.CallbackContext;
@@ -235,7 +236,7 @@ public class Driver {
         } else {
             heartBeatSchedule = Optional.empty();
         }
-        return doCompleted(event.getNewStatus(), event.getOutputChecksum(), callbackContext)
+        return doCompleted(event.getNewStatus(), event.getMessage(), event.getOutputChecksum(), callbackContext)
                 .handleAsync(Context.current().wrapFunction((nul, e) -> {
                     heartBeatSchedule.ifPresent(hb -> hb.cancel(false));
                     if (e != null) {
@@ -245,7 +246,11 @@ public class Driver {
                 }), executor);
     }
 
-    private CompletableFuture<Void> doCompleted(Status status, String outputChecksum, CallbackContext callbackContext) {
+    private CompletableFuture<Void> doCompleted(
+            Status status,
+            String message,
+            String outputChecksum,
+            CallbackContext callbackContext) {
         Request invokerCallback = callbackContext.getInvokerCallback();
 
         HttpClientConfiguration clientConfiguration = HttpClientConfiguration.newBuilder()
@@ -272,9 +277,13 @@ public class Driver {
         }
 
         return optionallyEnableSsh.handle(Context.current().wrapFunction((completedBuild, throwable) -> {
-            if (throwable != null) {
-                logger.error("Completing with SYSTEM_ERROR.", throwable);
-                return BuildCompleted.builder().throwable(throwable).buildStatus(ResultStatus.SYSTEM_ERROR).build();
+            // If its a system error from the agent generate a throwable to pass the message on.
+            if (status == Status.SYSTEM_ERROR) {
+                logger.error("Completing with SYSTEM_ERROR and message {}", message);
+                return BuildCompleted.builder()
+                        .throwable(new DriverException(message))
+                        .buildStatus(ResultStatus.SYSTEM_ERROR)
+                        .build();
             } else {
                 return BuildCompleted.builder()
                         .outputChecksum(outputChecksum)

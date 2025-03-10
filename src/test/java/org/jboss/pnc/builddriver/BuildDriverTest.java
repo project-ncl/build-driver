@@ -20,6 +20,8 @@ package org.jboss.pnc.builddriver;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.RestAssured;
+import io.restassured.filter.log.RequestLoggingFilter;
+import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.specification.RequestSpecification;
 import io.undertow.util.Headers;
 import org.jboss.pnc.api.builddriver.dto.BuildCancelRequest;
@@ -28,6 +30,7 @@ import org.jboss.pnc.api.builddriver.dto.BuildRequest;
 import org.jboss.pnc.api.builddriver.dto.BuildResponse;
 import org.jboss.pnc.api.dto.Request;
 import org.jboss.pnc.api.enums.ResultStatus;
+import org.jboss.pnc.buildagent.api.Status;
 import org.jboss.pnc.buildagent.api.TaskStatusUpdateEvent;
 import org.jboss.pnc.builddriver.buildagent.Server;
 import org.jboss.pnc.builddriver.dto.CallbackContext;
@@ -35,8 +38,10 @@ import org.jboss.pnc.builddriver.invokerserver.CallbackHandler;
 import org.jboss.pnc.builddriver.invokerserver.CallbackServletFactory;
 import org.jboss.pnc.builddriver.invokerserver.HttpServer;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -70,15 +75,15 @@ public class BuildDriverTest {
 
     private static final String BIND_HOST = "127.0.0.1";
 
-    private static Path workingDirectory;
-    private static HttpServer callbackServer;
+    private Path workingDirectory;
+    private HttpServer callbackServer;
 
-    private static URI baseBuildAgentUri;
+    private URI baseBuildAgentUri;
 
-    private static final BlockingQueue<BuildCompleted> completedBuilds = new ArrayBlockingQueue<>(10);
+    private final BlockingQueue<BuildCompleted> completedBuilds = new ArrayBlockingQueue<>(10);
 
-    @BeforeAll
-    public static void beforeClass() throws Exception {
+    @BeforeEach
+    public void beforeClass() throws Exception {
         // uncomment to log all requests
         // RestAssured.filters(new RequestLoggingFilter(), new ResponseLoggingFilter());
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
@@ -96,8 +101,8 @@ public class BuildDriverTest {
         callbackServer.start(8082, BIND_HOST);
     }
 
-    @AfterAll
-    public static void afterClass() {
+    @AfterEach
+    public void afterClass() {
         Server.stopServer();
         callbackServer.stop();
     }
@@ -269,4 +274,35 @@ public class BuildDriverTest {
         Assertions.assertEquals(ResultStatus.FAILED, buildCompleted.getBuildStatus());
     }
 
+    @Test
+    @Timeout(10)
+    public void shouldStartAndReportSystemError() throws URISyntaxException, InterruptedException {
+
+        Request callback = new Request(
+                Request.Method.POST,
+                new URI("http://localhost:8082/" + CallbackHandler.class.getSimpleName()),
+                Collections.singletonList(new Request.Header(Headers.CONTENT_TYPE_STRING, MediaType.APPLICATION_JSON)));
+
+        CallbackContext context = CallbackContext.builder()
+                .invokerCallback(callback)
+                .environmentBaseUrl(baseBuildAgentUri.toString())
+                .build();
+
+        TaskStatusUpdateEvent event = TaskStatusUpdateEvent.newBuilder()
+                .newStatus(Status.SYSTEM_ERROR)
+                .message("BiFrost Error")
+                .context(context)
+                .build();
+
+        given().contentType(MediaType.APPLICATION_JSON)
+                .body(event)
+                .when()
+                .put("/internal/completed")
+                .then()
+                .statusCode(204);
+
+        BuildCompleted buildCompleted = completedBuilds.take();
+        Assertions.assertEquals(ResultStatus.SYSTEM_ERROR, buildCompleted.getBuildStatus());
+        Assertions.assertTrue(buildCompleted.getThrowable().getMessage().contains("BiFrost Error"));
+    }
 }
