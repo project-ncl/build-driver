@@ -150,12 +150,12 @@
     <dependency>
       <groupId>org.jboss.pnc</groupId>
       <artifactId>pnc-common</artifactId>
-      <version>3.0.2</version>
+      <version>3.2.0</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.pnc</groupId>
       <artifactId>pnc-api</artifactId>
-      <version>3.0.7</version>
+      <version>3.2.0</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.pnc.logging</groupId>
