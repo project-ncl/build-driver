@@ -58,7 +58,7 @@
   <properties>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
     <maven.compiler.target>17</maven.compiler.target>
-    <quarkus.platform.version>2.16.12.Final</quarkus.platform.version>
+    <quarkus.platform.version>3.26.1</quarkus.platform.version>
     <maven.compiler.source>17</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
