@@ -28,6 +28,8 @@ quarkus:
         filter-logger-name-pattern: org.jboss.pnc.*
         level: INFO
   http:
+    enable-compression: true
+    enable-decompression: true
     cors:
       ~: true
       origins: "/.*/"
