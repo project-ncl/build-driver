@@ -61,6 +61,7 @@ build-driver:
       echo "[ERROR] Aborting"
       exit 1
     fi
+    rm -rf /mnt/secrets/ $${HOME}/.ssh/
     %{command}
 
 "%test":
