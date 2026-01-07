@@ -62,7 +62,7 @@ build-driver:
       exit 1
     fi
     set +xe
-    rm -rf /mnt/secrets/**/* $${HOME}/.ssh/* || { echo "Removal of secrets failed or misconfigured secrets directory. Check build driver configuration." && exit 1 }
+    rm -rf /mnt/secrets/**/* $${HOME}/.ssh/* || { echo "Removal of secrets failed or misconfigured secrets directory. Check build driver configuration." && exit 1; }
     set -xe
     %{command}
 
