@@ -25,7 +25,6 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
-import io.quarkus.oidc.client.OidcClient;
 import io.undertow.util.Headers;
 import org.apache.commons.text.StringSubstitutor;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -44,12 +43,12 @@ import org.jboss.pnc.buildagent.client.BuildAgentClient;
 import org.jboss.pnc.buildagent.client.BuildAgentClientException;
 import org.jboss.pnc.buildagent.client.BuildAgentHttpClient;
 import org.jboss.pnc.buildagent.client.HttpClientConfiguration;
-import org.jboss.pnc.buildagent.common.BuildAgentException;
 import org.jboss.pnc.buildagent.common.http.HeartbeatSender;
 import org.jboss.pnc.buildagent.common.http.HttpClient;
 import org.jboss.pnc.builddriver.dto.CallbackContext;
 import org.jboss.pnc.common.Strings;
 import org.jboss.pnc.common.otel.OtelUtils;
+import org.jboss.pnc.quarkus.client.auth.runtime.PNCClientAuth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -89,7 +88,7 @@ public class Driver {
     ObjectMapper objectMapper;
 
     @Inject
-    OidcClient oidcClient;
+    PNCClientAuth pncClientAuth;
 
     @ConfigProperty(name = "build-driver.self-base-url")
     String selfBaseUrl;
@@ -421,16 +420,7 @@ public class Driver {
     private List<Request.Header> addAuthenticationToHeader(List<Request.Header> headers) {
 
         List<Request.Header> toReturn = new ArrayList<>(headers);
-        toReturn.add(new Request.Header(HttpHeaders.AUTHORIZATION, "Bearer " + getFreshAccessToken()));
+        toReturn.add(new Request.Header(HttpHeaders.AUTHORIZATION, pncClientAuth.getHttpAuthorizationHeaderValue()));
         return toReturn;
-    }
-
-    /**
-     * Get an access token for the service account
-     *
-     * @return fresh access token
-     */
-    private String getFreshAccessToken() {
-        return oidcClient.getTokens().await().indefinitely().getAccessToken();
     }
 }
