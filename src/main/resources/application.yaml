@@ -80,6 +80,11 @@ build-driver:
     set -xe
     %{command}
 
+pnc_client_auth:
+  type: OIDC # or LDAP
+  # ldap_credentials:
+  #    path: /mnt/secrets/ldap_credentials # file must be in format: <username>:<password>
+
 "%test":
   build-driver:
     self-base-url: http://localhost:8081/
@@ -88,6 +93,9 @@ build-driver:
       cd %{workingDirectory}
       %{command}
   quarkus:
+    arc:
+      # to use the Mocked one
+      exclude-types: org.jboss.pnc.quarkus.client.auth.runtime.PNCClientAuthImpl
     http:
       auth:
         basic: false
