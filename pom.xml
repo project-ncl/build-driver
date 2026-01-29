@@ -93,12 +93,8 @@
         <artifactId>quarkus-oidc-client</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-keycloak-authorization</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy</artifactId>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-elytron-security-ldap</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>

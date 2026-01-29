@@ -28,6 +28,8 @@ quarkus:
         filter-logger-name-pattern: org.jboss.pnc.*
         level: INFO
   http:
+    auth:
+      basic: true
     enable-compression: true
     enable-decompression: true
     cors:
@@ -46,6 +48,18 @@ quarkus:
     client-id: my-client-id
     credentials:
       secret: hey
+
+  security:
+    ldap:
+      # enable LDAP: build-time property
+      enabled: true
+      cache:
+        enabled: true
+        max-age: 5m
+      dir-context:
+        url: ldaps://ldap-server.com
+      identity-mapping:
+        search-base-dn: ou=company.com
 
 build-driver:
   self-base-url: http://this-service-host-for-a-callback/
@@ -74,10 +88,16 @@ build-driver:
       cd %{workingDirectory}
       %{command}
   quarkus:
+    http:
+      auth:
+        basic: false
     oidc:
       enabled: false
     oidc-client:
       enabled: false
+    security:
+      ldap:
+        enabled: false
     log:
       console:
         json: false
