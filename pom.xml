@@ -93,11 +93,6 @@
         <artifactId>quarkus-oidc-client</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jboss.pnc</groupId>
-      <artifactId>quarkus-pnc-client-auth</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
         <groupId>io.quarkus</groupId>
         <artifactId>quarkus-elytron-security-ldap</artifactId>
     </dependency>
@@ -352,17 +347,6 @@
       <releases>
         <enabled>true</enabled>
       </releases>
-    </repository>
-    <repository>
-      <name>Central Portal Snapshots</name>
-      <id>central-portal-snapshots</id>
-      <url>https://central.sonatype.com/repository/maven-snapshots/</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
     </repository>
   </repositories>
   <profiles>
