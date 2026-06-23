@@ -1,14 +1,14 @@
 quarkus:
   application:
     name: pnc-build-driver
-  opentelemetry:
+  otel:
     enabled: true
-    tracer:
+    traces:
       enabled: true
-      exporter:
-        otlp:
-          # Send telemetry data to an opentelemetry-collector
-          #endpoint: http://localhost:4317
+    exporter:
+      otlp:
+        # Send telemetry data to an opentelemetry-collector
+        #endpoint: http://localhost:4317
   shutdown:
     timeout: 30
   log:
@@ -33,7 +33,7 @@ quarkus:
     enable-compression: true
     enable-decompression: true
     cors:
-      ~: true
+      enabled: true
       origins: "/.*/"
   oidc:
     auth-server-url: https://keycloak-host/auth/realms/my-realm
