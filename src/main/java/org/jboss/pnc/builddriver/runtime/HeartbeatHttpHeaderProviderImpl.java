@@ -4,8 +4,8 @@ import org.jboss.pnc.api.dto.Request;
 import org.jboss.pnc.buildagent.common.http.HeartbeatHttpHeaderProvider;
 import org.jboss.pnc.builddriver.pncclientauth.PNCClientAuth;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.util.Collections;
 import java.util.List;
 
