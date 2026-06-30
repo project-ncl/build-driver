@@ -1,14 +1,6 @@
 quarkus:
   application:
-    name: pnc-build-driver
-  otel:
-    enabled: true
-    traces:
-      enabled: true
-    exporter:
-      otlp:
-        # Send telemetry data to an opentelemetry-collector
-        #endpoint: http://localhost:4317
+    name: build-driver
   shutdown:
     timeout: 30
   log:
