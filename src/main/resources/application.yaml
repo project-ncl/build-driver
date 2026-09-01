@@ -62,7 +62,7 @@ build-driver:
     git init %{projectName}
     cd %{projectName}
     git remote add origin %{scmUrl}
-    git fetch --progress --depth 1 refs/tags/%{scmTag}:refs/tags/%{scmTag}
+    git fetch --progress --depth 1 origin refs/tags/%{scmTag}:refs/tags/%{scmTag}
     git checkout refs/tags/%{scmTag}
     git_commit_id="$(git rev-parse HEAD)"
     if [[ "%{scmRevision}" != "\${git_commit_id}" ]]; then
