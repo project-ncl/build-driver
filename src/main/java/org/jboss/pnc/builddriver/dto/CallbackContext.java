@@ -22,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import org.jboss.pnc.api.dto.HeartbeatConfig;
 import org.jboss.pnc.api.dto.Request;
@@ -32,7 +31,7 @@ import org.jboss.pnc.api.dto.Request;
  */
 @AllArgsConstructor
 @Data
-@Builder(builderClassName = "Builder")
+@lombok.Builder(builderClassName = "Builder")
 @JsonDeserialize(builder = CallbackContext.Builder.class)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CallbackContext {
