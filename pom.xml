@@ -19,6 +19,14 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.jboss</groupId>
+    <artifactId>jboss-parent</artifactId>
+    <version>54</version>
+    <relativePath/>
+  </parent>
+
   <groupId>org.jboss.pnc</groupId>
   <artifactId>build-driver</artifactId>
   <version>3.5.1-SNAPSHOT</version>
@@ -57,18 +65,15 @@
 
   <properties>
     <surefire-plugin.version>3.6.0</surefire-plugin.version>
+    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <quarkus.platform.version>3.40.0</quarkus.platform.version>
-    <maven.compiler.source>17</maven.compiler.source>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <maven.compiler.parameters>true</maven.compiler.parameters>
-    <compiler-plugin.version>3.16.0</compiler-plugin.version>
+    <jdk.min.version>17</jdk.min.version>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
     <quarkus-logging-kafka.version>3.0.5</quarkus-logging-kafka.version>
-    <version.javadoc.plugin>3.12.0</version.javadoc.plugin>
-    <version.source.plugin>3.4.0</version.source.plugin>
     <quarkus.package.jar.type>uber-jar</quarkus.package.jar.type>
     <tagSuffix />
   </properties>
@@ -237,17 +242,15 @@
               <tagNameFormat>@{project.version}${tagSuffix}</tagNameFormat>
               <autoVersionSubmodules>true</autoVersionSubmodules>
               <useReleaseProfile>false</useReleaseProfile>
-              <releaseProfiles>release</releaseProfiles>
+              <releaseProfiles>central-release</releaseProfiles>
               <goals>deploy</goals>
           </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>${compiler-plugin.version}</version>
       </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>${surefire-plugin.version}</version>
         <configuration>
           <systemPropertyVariables>
             <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
@@ -396,58 +399,6 @@
       <properties>
         <quarkus.package.jar.type>uber-jar</quarkus.package.jar.type>
       </properties>
-    </profile>
-    <profile>
-        <id>release</id>
-        <build>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-source-plugin</artifactId>
-                    <version>${version.source.plugin}</version>
-                    <executions>
-                        <execution>
-                            <id>attach-sources</id>
-                            <goals>
-                                <goal>jar-no-fork</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>${version.javadoc.plugin}</version>
-                    <executions>
-                        <execution>
-                            <id>attach-javadocs</id>
-                            <goals>
-                                <goal>jar</goal>
-                            </goals>
-                            <configuration>
-                                <detectOfflineLinks>false</detectOfflineLinks>
-                                <quiet>true</quiet>
-                                <doclint>none</doclint>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-gpg-plugin</artifactId>
-                    <version>3.2.8</version>
-                    <executions>
-                        <execution>
-                            <id>sign-artifacts</id>
-                            <phase>verify</phase>
-                            <goals>
-                                <goal>sign</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </build>
     </profile>
   </profiles>
 </project>
