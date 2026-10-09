@@ -17,13 +17,21 @@
  */
 package org.jboss.pnc.builddriver;
 
-import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.security.TestSecurity;
-import io.restassured.RestAssured;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
-import io.restassured.specification.RequestSpecification;
-import io.undertow.util.Headers;
+import static io.restassured.RestAssured.given;
+
+import java.lang.invoke.MethodHandles;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.function.Consumer;
+
+import jakarta.ws.rs.core.MediaType;
+
 import org.jboss.pnc.api.builddriver.dto.BuildCancelRequest;
 import org.jboss.pnc.api.builddriver.dto.BuildCompleted;
 import org.jboss.pnc.api.builddriver.dto.BuildRequest;
@@ -48,19 +56,11 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.ws.rs.core.MediaType;
-import java.lang.invoke.MethodHandles;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.function.Consumer;
-
-import static io.restassured.RestAssured.given;
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.security.TestSecurity;
+import io.restassured.RestAssured;
+import io.restassured.specification.RequestSpecification;
+import io.undertow.util.Headers;
 
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>

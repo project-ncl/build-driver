@@ -18,14 +18,15 @@
 
 package org.jboss.pnc.builddriver.runtime;
 
-import io.quarkus.runtime.ShutdownEvent;
-import io.quarkus.runtime.StartupEvent;
-import lombok.extern.slf4j.Slf4j;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.pnc.common.concurrent.Sequence;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
+import io.quarkus.runtime.ShutdownEvent;
+import io.quarkus.runtime.StartupEvent;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
