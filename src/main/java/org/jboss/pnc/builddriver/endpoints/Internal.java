@@ -18,10 +18,7 @@
 
 package org.jboss.pnc.builddriver.endpoints;
 
-import org.jboss.pnc.buildagent.api.TaskStatusUpdateEvent;
-import org.jboss.pnc.builddriver.Driver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.concurrent.CompletionStage;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -30,7 +27,11 @@ import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import java.util.concurrent.CompletionStage;
+
+import org.jboss.pnc.buildagent.api.TaskStatusUpdateEvent;
+import org.jboss.pnc.builddriver.Driver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Endpoint to receive build result from the build agent.

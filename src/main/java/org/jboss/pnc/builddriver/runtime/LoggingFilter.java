@@ -18,13 +18,7 @@
 
 package org.jboss.pnc.builddriver.runtime;
 
-import io.opentelemetry.api.trace.Span;
-import io.quarkus.security.identity.SecurityIdentity;
-import org.jboss.pnc.api.constants.MDCKeys;
-import org.jboss.pnc.common.log.MDCUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
+import java.io.IOException;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -34,7 +28,15 @@ import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.core.Request;
 import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.Provider;
-import java.io.IOException;
+
+import org.jboss.pnc.api.constants.MDCKeys;
+import org.jboss.pnc.common.log.MDCUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
+import io.opentelemetry.api.trace.Span;
+import io.quarkus.security.identity.SecurityIdentity;
 
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>

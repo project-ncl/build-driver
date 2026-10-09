@@ -18,6 +18,13 @@
 
 package org.jboss.pnc.builddriver.buildagent;
 
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.jboss.pnc.buildagent.common.BuildAgentException;
 import org.jboss.pnc.buildagent.common.RandomUtils;
 import org.jboss.pnc.buildagent.server.BuildAgentServer;
@@ -25,13 +32,6 @@ import org.jboss.pnc.buildagent.server.IoLoggerName;
 import org.jboss.pnc.buildagent.server.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>

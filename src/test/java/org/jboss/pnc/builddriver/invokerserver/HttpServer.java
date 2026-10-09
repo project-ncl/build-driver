@@ -18,22 +18,24 @@
 
 package org.jboss.pnc.builddriver.invokerserver;
 
+import static io.undertow.servlet.Servlets.defaultContainer;
+import static io.undertow.servlet.Servlets.deployment;
+import static io.undertow.servlet.Servlets.servlet;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
+
+import org.jboss.pnc.buildagent.server.BootstrapUndertow;
+
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 import io.undertow.servlet.api.DeploymentInfo;
 import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.InstanceFactory;
-import org.jboss.pnc.buildagent.server.BootstrapUndertow;
-
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import static io.undertow.servlet.Servlets.defaultContainer;
-import static io.undertow.servlet.Servlets.deployment;
-import static io.undertow.servlet.Servlets.servlet;
 
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
