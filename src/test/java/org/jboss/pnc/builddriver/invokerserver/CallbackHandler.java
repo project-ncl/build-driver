@@ -18,14 +18,16 @@
 
 package org.jboss.pnc.builddriver.invokerserver;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.jboss.pnc.api.builddriver.dto.BuildCompleted;
+import java.io.IOException;
+import java.util.function.Consumer;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.function.Consumer;
+
+import org.jboss.pnc.api.builddriver.dto.BuildCompleted;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>

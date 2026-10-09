@@ -18,13 +18,15 @@
 
 package org.jboss.pnc.builddriver.dto;
 
+import org.jboss.pnc.api.dto.HeartbeatConfig;
+import org.jboss.pnc.api.dto.Request;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.jboss.pnc.api.dto.HeartbeatConfig;
-import org.jboss.pnc.api.dto.Request;
 
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>

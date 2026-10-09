@@ -18,10 +18,11 @@
 
 package org.jboss.pnc.builddriver;
 
-import io.quarkus.test.Mock;
+import java.util.Set;
+
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
-import java.util.Set;
+import io.quarkus.test.Mock;
 
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
