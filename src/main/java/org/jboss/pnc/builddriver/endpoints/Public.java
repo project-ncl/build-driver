@@ -18,6 +18,15 @@
 
 package org.jboss.pnc.builddriver.endpoints;
 
+import java.time.ZonedDateTime;
+import java.util.concurrent.CompletionStage;
+
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.pnc.api.builddriver.dto.BuildCancelRequest;
 import org.jboss.pnc.api.builddriver.dto.BuildRequest;
@@ -27,14 +36,6 @@ import org.jboss.pnc.builddriver.BuildInformationConstants;
 import org.jboss.pnc.builddriver.Driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import java.time.ZonedDateTime;
-import java.util.concurrent.CompletionStage;
 
 /**
  * Endpoint to start/cancel the build.

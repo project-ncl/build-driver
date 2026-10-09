@@ -1,14 +1,15 @@
 package org.jboss.pnc.builddriver;
 
-import org.jboss.pnc.buildagent.common.http.HeartbeatHttpHeaderProvider;
-import org.jboss.pnc.buildagent.common.http.HeartbeatSender;
-import org.jboss.pnc.buildagent.common.http.HttpClient;
+import java.io.IOException;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
-import java.io.IOException;
+
+import org.jboss.pnc.buildagent.common.http.HeartbeatHttpHeaderProvider;
+import org.jboss.pnc.buildagent.common.http.HeartbeatSender;
+import org.jboss.pnc.buildagent.common.http.HttpClient;
 
 /**
  * @author <a href="mailto:matejonnet@gmail.com">Matej Lazar</a>
