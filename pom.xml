@@ -28,7 +28,7 @@
 
   <groupId>org.jboss.pnc</groupId>
   <artifactId>build-driver</artifactId>
-  <version>3.5.1-SNAPSHOT</version>
+  <version>4.0.0-SNAPSHOT</version>
 
   <name>build-driver</name>
   <description>Stateless build driver</description>
